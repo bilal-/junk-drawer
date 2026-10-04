@@ -15,6 +15,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
+from verify_backup import checksum_failures, digest
+
 PRUNE = {'.git', 'node_modules', '.next', '.turbo', '.astro', 'dist', 'build',
          'coverage', '.venv', 'venv', 'vendor', 'target', '.cache', 'Pods',
          'DerivedData', '.gradle', '.expo', '__pycache__', '.worktrees',
@@ -37,14 +39,6 @@ def private_candidate(path):
 
 def now():
     return datetime.now(timezone.utc).isoformat()
-
-
-def digest(path):
-    h = hashlib.sha256()
-    with Path(path).open('rb') as f:
-        for b in iter(lambda: f.read(1024 * 1024), b''):
-            h.update(b)
-    return h.hexdigest()
 
 
 def expand(path):
@@ -416,23 +410,16 @@ class Package:
 
 
 def verify(destination):
+    """Checks the package against its checksums, as the standalone verifier
+    does, and that it is still private: owner-only, a README in every folder."""
     root = expand(destination)
-    checksum_paths = set()
-    for line in (root / 'SHA256SUMS.txt').read_text().splitlines():
-        expected, relative = line.split('  ', 1); safe_relative(relative)
-        if not re.fullmatch('[0-9a-f]{64}', expected): raise ValueError('Malformed SHA-256')
-        target = root / relative
-        if target.is_symlink() or not target.is_file() or digest(target) != expected:
-            raise RuntimeError('Backup integrity failure: ' + relative)
-        if relative in checksum_paths: raise ValueError('Duplicate checksum path')
-        checksum_paths.add(relative)
-    actual = {str(p.relative_to(root)) for p in walk_files(root, prune=set())}
-    if actual != checksum_paths | {'SHA256SUMS.txt'}: raise RuntimeError('Unexpected or unlisted package files')
+    failures, count = checksum_failures(root)
+    if failures:
+        raise RuntimeError('Backup integrity failure: ' + ', '.join(failures))
     for p in [root] + list(root.rglob('*')):
-        if p.is_symlink(): raise RuntimeError('Package contains a symlink')
         if p.is_dir() and not (p / 'README.txt').is_file(): raise RuntimeError('Folder lacks README: ' + str(p))
         if stat.S_IMODE(p.stat().st_mode) & 0o077: raise RuntimeError('Non-private package permissions')
-    print('Verified %d checksummed files; no source data changed.' % len(checksum_paths), flush=True)
+    print('Verified %d checksummed files; no source data changed.' % count, flush=True)
 
 
 def main():
