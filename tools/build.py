@@ -254,7 +254,9 @@ def readme(text, skills):
         raise ValueError(f"README.md needs one {SKILLS_START.strip()} line, then one {SKILLS_END}")
     before, _, rest = text.partition(SKILLS_START)
     _, _, after = rest.partition(SKILLS_END)
-    rows = [f"| [`{s['name']}`](skills/{s['name']}/SKILL.md) | {s['summary']} |" for s in skills]
+    # A | in a summary would end its table cell.
+    cells = [(s["name"], s["summary"].replace("|", "\\|")) for s in skills]
+    rows = [f"| [`{name}`](skills/{name}/SKILL.md) | {summary} |" for name, summary in cells]
     table = "\n".join(["| Skill | What it does |", "| --- | --- |", *rows]) + "\n"
     return before + SKILLS_START + table + SKILLS_END + after
 

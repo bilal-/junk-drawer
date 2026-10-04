@@ -74,6 +74,10 @@ for name, text in {
     except ValueError:
         pass
 
+row = [line for line in build.readme(GOOD, [{"name": "x", "summary": "R&D | operations"}]).splitlines() if "R&D" in line][0]
+if row.replace("\\|", "").count("|") != 3:
+    failures.append(f"a | in a summary splits its table row: {row}")
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:
