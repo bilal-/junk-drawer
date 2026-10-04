@@ -221,6 +221,8 @@ def clean_remote(url):
         return url
     p = urlsplit(url)
     host = p.hostname or ''
+    if ':' in host:
+        host = '[' + host + ']'
     if p.port:
         host += ':' + str(p.port)
     return urlunsplit((p.scheme, host, p.path, '', ''))

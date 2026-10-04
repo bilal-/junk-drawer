@@ -184,6 +184,19 @@ finally:
     shutil.rmtree(work)
 
 
+# A remote on an IPv6 address keeps a valid URL.
+sys.path.insert(0, str(SCRIPTS))
+import project_backup  # noqa: E402
+for url, want in {
+    "ssh://git@[2001:db8::1]:2222/repo.git": "ssh://[2001:db8::1]:2222/repo.git",
+    "https://user:pass@[2001:db8::1]/repo.git": "https://[2001:db8::1]/repo.git",
+    "https://token@example.com/repo.git": "https://example.com/repo.git",
+    "git@example.com:repo.git": "git@example.com:repo.git",
+}.items():
+    got = project_backup.clean_remote(url)
+    check(f"clean_remote({url})", got == want, got)
+
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:
