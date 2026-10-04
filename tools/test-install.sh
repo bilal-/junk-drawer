@@ -11,6 +11,7 @@ trap 'rm -rf "$work"' EXIT INT TERM
 export HOME="$work/a home"
 unset CODEX_HOME
 skills="$HOME/.claude/skills"
+backups="$HOME/.junk-drawer-backups"
 failures=0
 
 # Runs install.sh and keeps its exit status in $status, so a failure is
@@ -37,20 +38,20 @@ reset
 install --copy unslop
 check "copies with a marker" '[ -f "$skills/unslop/$(printf .junk-drawer)" ] && [ ! -L "$skills/unslop" ]'
 install --copy unslop
-check "reinstalls over its own unchanged copy without a backup" '[ -z "$(ls "$skills" | grep backup)" ]'
+check "reinstalls over its own unchanged copy without a backup" '[ ! -e "$backups" ]'
 echo "mine" >"$skills/unslop/notes.txt"
 install --uninstall unslop
-check "uninstall keeps a copy the user changed, as a backup" '[ ! -e "$skills/unslop" ] && cat "$skills"/unslop.backup-*/notes.txt | grep -q mine'
-rm -rf "$skills"/unslop.backup-*
+check "uninstall keeps a copy the user changed, as a backup" '[ ! -e "$skills/unslop" ] && cat "$backups"/unslop-*/notes.txt | grep -q mine'
+rm -rf "$backups"/unslop-*
 install --copy unslop
 ln -s /tmp "$skills/unslop/added-link"
 install --uninstall unslop
-check "uninstall keeps a copy the user added a link to" '[ -L "$skills"/unslop.backup-*/added-link ]'
-rm -rf "$skills"/unslop.backup-*
+check "uninstall keeps a copy the user added a link to" '[ -L "$backups"/unslop-*/added-link ]'
+rm -rf "$backups"/unslop-*
 install --copy unslop
 mkfifo "$skills/unslop/added-pipe"
 install --uninstall unslop
-check "uninstall keeps a copy the user added a pipe to, without reading it" '[ -p "$skills"/unslop.backup-*/added-pipe ]'
+check "uninstall keeps a copy the user added a pipe to, without reading it" '[ -p "$backups"/unslop-*/added-pipe ]'
 
 reset
 mkdir "$skills/unslop" && echo "theirs" >"$skills/unslop/SKILL.md"
@@ -59,13 +60,14 @@ check "skips a skill it did not install" 'grep -q theirs "$skills/unslop/SKILL.m
 install --uninstall unslop
 check "uninstall leaves a skill it did not install" 'grep -q theirs "$skills/unslop/SKILL.md"'
 install --force unslop
-check "--force keeps the old skill as a backup" 'grep -q theirs "$skills"/unslop.backup-*/SKILL.md && [ -L "$skills/unslop" ]'
+check "backups are kept outside the skills folder" '[ -z "$(ls "$skills" | grep -v -x -e unslop -e docsmith)" ]'
+check "--force keeps the old skill as a backup" 'grep -q theirs "$backups"/unslop-*/SKILL.md && [ -L "$skills/unslop" ]'
 mkdir "$skills/docsmith"
 install --force docsmith
 install --uninstall docsmith
 mkdir "$skills/docsmith"
 install --force docsmith
-check "a second backup in the same second gets its own name" '[ "$(ls -d "$skills"/docsmith.backup-* | wc -l | tr -d " ")" = 2 ]'
+check "a second backup in the same second gets its own name" '[ "$(ls -d "$backups"/docsmith-* | wc -l | tr -d " ")" = 2 ]'
 
 reset
 mkdir -p "$work/elsewhere/skills/unslop" && touch "$work/elsewhere/skills/unslop/SKILL.md"

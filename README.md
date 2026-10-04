@@ -50,7 +50,7 @@ It downloads the drawer and copies the skills into every harness it finds:
 Claude Code, Codex, Gemini CLI, Antigravity CLI, Qwen Code, OpenCode, GitHub
 Copilot, Cursor, and the shared `~/.agents/skills` folder. It never replaces a
 skill of the same name that it did not install, unless you pass `--force`, and
-then it keeps the old one as a backup. Pass `--dry-run` to see what it would
+then it moves the old one to `~/.junk-drawer-backups`. Pass `--dry-run` to see what it would
 do, `--agent <name>` to pick a harness, and `--dir <path>` for any other.
 
 Read [`install.sh`](install.sh) before you pipe it to `sh`; it is short on

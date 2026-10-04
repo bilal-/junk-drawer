@@ -56,7 +56,7 @@ Pixel sizes do not map one to one onto points. Keep the ratios of the type scale
 
 * Each token has `$value`, usually `$type`, and maybe `$description`. Groups pass `$type` down to their tokens.
 * Aliases look like `"{color.brand.primary}"`. Follow them to the final value.
-* Colours are objects with `colorSpace` and `components`, often with a `hex` fallback. Use the hex.
+* Colours are objects with `colorSpace` and `components`, often with a `hex` fallback. Use the hex when there is one; otherwise convert the components from their colour space, and keep any `alpha` as transparency.
 * Dimensions are `{ "value": 16, "unit": "px" }`.
 * Keep anything under `$extensions` when you edit the file.
 

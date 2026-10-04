@@ -153,9 +153,8 @@ End the rounds at the first of:
 - **Clean:** for the last round's commits, the reviewer says `NO FINDINGS`, or
   everything it raised was rejected or was a ledger repeat.
 - **Budget:** the round, time, or spend cap.
-- **No progress:** two rounds in a row where every finding was rejected (the
-  reviewer is producing noise), or three rounds where findings do not fall
-  because each round's fixes create the next round's findings.
+- **No progress:** three rounds where findings do not fall, because each
+  round's fixes create the next round's findings.
 - **Oscillation:** a finding comes back contested a second time.
 - **Broken ground** you cannot recover from (below).
 

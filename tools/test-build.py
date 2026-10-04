@@ -33,9 +33,10 @@ READ = {
 
 
 def read(fields):
-    path = Path(tempfile.mkdtemp()) / "SKILL.md"
-    path.write_text(f"---\nname: x\n{fields}---\nbody\n")
-    return build.frontmatter(path)
+    with tempfile.TemporaryDirectory() as folder:
+        path = Path(folder) / "SKILL.md"
+        path.write_text(f"---\nname: x\n{fields}---\nbody\n")
+        return build.frontmatter(path)
 
 
 failures = [f"accepted {name}" for name, text in REJECTED.items() if not read(text)[1]]

@@ -13,6 +13,7 @@ set -eu
 REPO="bilal-/junk-drawer"
 REF="${JUNK_DRAWER_REF:-main}"
 MARK=".junk-drawer"
+BACKUPS="${JUNK_DRAWER_BACKUPS:-$HOME/.junk-drawer-backups}"
 
 usage() {
   cat <<'EOF'
@@ -28,14 +29,18 @@ Options:
   --link         Link to this checkout instead of copying (edits show at once).
   --copy         Copy, even from a checkout.
   --force        Replace a skill of the same name that this script did not
-                 install. The old one is kept as NAME.backup-<time>.
+                 install. The old one is moved to the backups folder.
   --uninstall    Remove skills this script installed, instead of installing.
-                 A copy you have changed since is kept as a backup instead.
+                 A copy you have changed since is moved to the backups folder.
   --dry-run      Say what would happen; change nothing.
   --list         List the skills in the drawer and exit.
   -h, --help     This help.
 
-Environment: JUNK_DRAWER_REF picks a branch or tag (default: main).
+Backups go to ~/.junk-drawer-backups, outside every skills folder, so no
+harness loads an old copy as a skill.
+
+Environment: JUNK_DRAWER_REF picks a branch or tag (default: main);
+JUNK_DRAWER_BACKUPS picks the backups folder.
 EOF
 }
 
@@ -178,15 +183,16 @@ ours() {
   fi
 }
 
-# Moves $1 aside to a backup name nothing else has, and says where.
+# Moves $1 into the backups folder, under a name nothing else has, and says
+# where. The backups sit outside every skills folder, so no harness loads them.
 back_up() {
-  backup="$1.backup-$(date +%Y%m%d%H%M%S)"
+  backup="$BACKUPS/$(basename -- "$1")-$(date +%Y%m%d%H%M%S)"
   n=1
   while [ -e "$backup" ] || [ -L "$backup" ]; do
     n=$((n + 1))
-    backup="$1.backup-$(date +%Y%m%d%H%M%S)-$n"
+    backup="$BACKUPS/$(basename -- "$1")-$(date +%Y%m%d%H%M%S)-$n"
   done
-  say "keep $1 as $backup"; run mv "$1" "$backup"
+  say "keep $1 as $backup"; run mkdir -p "$BACKUPS"; run mv "$1" "$backup"
 }
 
 for target in $targets; do

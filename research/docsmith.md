@@ -147,7 +147,7 @@ Reynolds and Duarte (slide:ology) want sparse projected slides. Tufte, "The Cogn
 29. Data tables are simple rectangles with a header row; no merged or split cells. Microsoft checker rules page. Std.
 30. Link text says where it goes (2.4.4); document language set (3.1.1); images inline so reading order holds (1.3.2). Std.
 31. PDFs tagged, titled, title displayed. W3C PDF18, https://www.w3.org/WAI/WCAG22/Techniques/pdf/PDF18 ; PDF/UA-1 (ISO 14289-1:2014) and PDF/UA-2 (ISO 14289-2:2024), https://pdfa.org/announcing-no-cost-access-to-pdfs-accessibility-standards/ . Std.
-32. Legal floor: Section 508 pins WCAG 2.0 AA (https://www.access-board.gov/ict/); the European Accessibility Act applies from 28 June 2025 via EN 301 549 (WCAG 2.1 AA) (https://universaldesign.ie/communications-digital/european-accessibility-act). Building to WCAG 2.2 AA meets both. Std.
+32. Legal floor: Section 508 pins WCAG 2.0 AA (https://www.access-board.gov/ict/); the European Accessibility Act applies from 28 June 2025 via EN 301 549 (WCAG 2.1 AA) (https://universaldesign.ie/communications-digital/european-accessibility-act). WCAG 2.2 AA is the sensible target, but the laws add requirements of their own (EN 301 549 goes beyond WCAG), so meeting it does not by itself prove compliance. Std.
 
 ## 4. Spreadsheets
 

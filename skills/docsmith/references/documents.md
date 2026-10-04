@@ -49,7 +49,7 @@ Reports, memos, proposals, letters, and other formatted documents (Word, Google 
 * Link text says where it goes; no "click here".
 * Document title and language are set in the properties.
 * PDF exports are tagged, have a title that is shown in the window, and keep the heading structure. Aim for PDF/UA. A scanned or untagged PDF is a flag.
-* Building to WCAG 2.2 AA meets Section 508 and the European Accessibility Act.
+* Build to WCAG 2.2 AA. Where a law applies (Section 508, the European Accessibility Act), say it needs its own check; meeting WCAG alone does not prove compliance.
 
 ## PDFs (review only)
 
