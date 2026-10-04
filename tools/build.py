@@ -244,7 +244,14 @@ SKILLS_END = "<!-- /skills -->"
 
 
 def readme(text, skills):
-    """README.md's text with its skills table rewritten from these skills."""
+    """README.md's text with its skills table rewritten from these skills.
+
+    Raises ValueError unless the text has each marker once, in order: anything
+    else would rewrite, or drop, the wrong part of the README.
+    """
+    start, end = text.find(SKILLS_START), text.find(SKILLS_END)
+    if text.count(SKILLS_START) != 1 or text.count(SKILLS_END) != 1 or end < start:
+        raise ValueError(f"README.md needs one {SKILLS_START.strip()} line, then one {SKILLS_END}")
     before, _, rest = text.partition(SKILLS_START)
     _, _, after = rest.partition(SKILLS_END)
     rows = [f"| [`{s['name']}`](skills/{s['name']}/SKILL.md) | {s['summary']} |" for s in skills]
@@ -255,7 +262,12 @@ def readme(text, skills):
 def main():
     check = "--check" in sys.argv[1:]
     found = problems()
-    for path, text in outputs().items():
+    try:
+        generated = outputs()
+    except ValueError as problem:
+        found.append(str(problem))
+        generated = {}
+    for path, text in generated.items():
         target = ROOT / path
         if check:
             if not target.exists() or target.read_text() != text:

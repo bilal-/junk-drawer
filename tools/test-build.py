@@ -59,6 +59,21 @@ for changed, before, now, want in BUMPS:
     if got != want:
         failures.append(f"needs_bump({changed}, {before}, {now}) gave {got}, not {want}")
 
+SKILL = {"name": "x", "summary": "Does x."}
+GOOD = f"top\n{build.SKILLS_START}old\n{build.SKILLS_END}\nbottom\n"
+if "bottom" not in build.readme(GOOD, [SKILL]) or "Does x." not in build.readme(GOOD, [SKILL]):
+    failures.append("readme() lost the text around the table, or the table")
+for name, text in {
+    "no closing marker": f"top\n{build.SKILLS_START}old\nbottom\n",
+    "no opening marker": f"top\nold\n{build.SKILLS_END}\nbottom\n",
+    "markers in the wrong order": f"top\n{build.SKILLS_END}\n{build.SKILLS_START}bottom\n",
+}.items():
+    try:
+        build.readme(text, [SKILL])
+        failures.append(f"readme() accepted a README with {name}")
+    except ValueError:
+        pass
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:
