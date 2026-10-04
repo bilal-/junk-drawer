@@ -165,6 +165,20 @@ try:
 finally:
     shutil.rmtree(work)
 
+# A key beside a project, inside a folder that holds that project.
+work = case()
+try:
+    git_project(work / "ws" / "client" / "portal", {"package.json": "{}"})
+    (work / "ws" / "client" / "upload.p12").write_bytes(b"key")
+    inventory = work / "inventory.json"
+    run(BACKUP, "inventory", "--root", work / "ws", "--output", inventory)
+    data = json.loads(inventory.read_text())
+    check("inventory lists a file beside a nested project", str(work / "ws" / "client" / "upload.p12") in data["unassigned_paths"],
+          str(data["unassigned_paths"]))
+finally:
+    shutil.rmtree(work)
+
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:

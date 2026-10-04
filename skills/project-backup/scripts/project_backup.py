@@ -177,11 +177,7 @@ def discover(roots):
                     {'id': p.name, 'path': str(p), 'root': str(root), 'kind': 'files', 'worktrees': []}
                 )
         covered = [Path(r['path']) for r in list(repos.values()) + components]
-        for p in root.iterdir():
-            if p.name in PRUNE or p.name == '.DS_Store' or p.is_symlink():
-                continue
-            if not any(p == q or p in q.parents for q in covered):
-                loose.append(str(p))
+        loose.extend(uncovered(root, covered))
     projects = list(repos.values()) + components
     counts = {}
     for p in projects:
@@ -203,6 +199,18 @@ def discover(roots):
         'projects': sorted(projects, key=lambda r: r['id']),
         'unassigned_paths': sorted(set(loose)),
     }
+
+
+def uncovered(folder, covered):
+    """Paths under folder that belong to no project. A folder holding a project
+    is opened, so what sits beside that project is listed too."""
+    for p in sorted(folder.iterdir()):
+        if p.name in PRUNE or p.name == '.DS_Store' or p.is_symlink() or p in covered:
+            continue
+        if any(p in q.parents for q in covered):
+            yield from uncovered(p, covered)
+        else:
+            yield str(p)
 
 
 def clean_remote(url):
