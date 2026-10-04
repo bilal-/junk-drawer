@@ -6,9 +6,10 @@ set -eu
 cd "$(dirname "$0")/.."
 shell=${1:-sh}
 root=$(pwd)
-work=$(mktemp -d)
+# A fixed template, so an odd TMPDIR cannot put the throwaway home anywhere else.
+work=$(mktemp -d /tmp/junk-drawer-test.XXXXXX)
 trap 'rm -rf "$work"' EXIT INT TERM
-export HOME="$work/a home"
+export HOME="$work/a home|with a bar"
 unset CODEX_HOME
 skills="$HOME/.claude/skills"
 backups="$HOME/.junk-drawer-backups"
@@ -94,5 +95,8 @@ reset
 install --dry-run --copy unslop
 check "a dry run changes nothing" '[ -z "$(ls -A "$skills")" ]'
 check "a dry run prints each command on one line" 'grep -q "would: cp -R .*unslop" "$work/out"'
+install --agent claude --dir "$work/x
+y"
+check "rejects a --dir with a newline" '[ "$status" != 0 ]'
 
 if [ "$failures" = 0 ]; then echo "test-install ($shell): ok"; else exit 1; fi

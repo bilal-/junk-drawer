@@ -51,21 +51,22 @@ fail() { printf 'install.sh: %s\n' "$*" >&2; exit 1; }
 nl='
 '
 
-# Every harness this script knows: a name, its skills folder, and the folder
-# whose presence means the harness is installed, separated by "|".
-harnesses() {
-  codex_home="${CODEX_HOME:-$HOME/.codex}"
-  cat <<EOF
-claude|$HOME/.claude/skills|$HOME/.claude
-codex|$codex_home/skills|$codex_home
-agents|$HOME/.agents/skills|$HOME/.agents
-gemini|$HOME/.gemini/skills|$HOME/.gemini
-antigravity|$HOME/.gemini/antigravity-cli/skills|$HOME/.gemini/antigravity-cli
-qwen|$HOME/.qwen/skills|$HOME/.qwen
-opencode|$HOME/.config/opencode/skills|$HOME/.config/opencode
-copilot|$HOME/.copilot/skills|$HOME/.copilot
-cursor|$HOME/.cursor/skills|$HOME/.cursor
-EOF
+# Every harness this script knows, and its skills folder. A harness counts as
+# installed when the folder holding its skills folder exists.
+HARNESSES="claude codex agents gemini antigravity qwen opencode copilot cursor"
+skills_folder() {
+  case "$1" in
+    claude) printf '%s' "$HOME/.claude/skills" ;;
+    codex) printf '%s' "${CODEX_HOME:-$HOME/.codex}/skills" ;;
+    agents) printf '%s' "$HOME/.agents/skills" ;;
+    gemini) printf '%s' "$HOME/.gemini/skills" ;;
+    antigravity) printf '%s' "$HOME/.gemini/antigravity-cli/skills" ;;
+    qwen) printf '%s' "$HOME/.qwen/skills" ;;
+    opencode) printf '%s' "$HOME/.config/opencode/skills" ;;
+    copilot) printf '%s' "$HOME/.copilot/skills" ;;
+    cursor) printf '%s' "$HOME/.cursor/skills" ;;
+    *) return 1 ;;
+  esac
 }
 
 agents=""
@@ -80,7 +81,10 @@ list=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --agent) [ $# -ge 2 ] || fail "--agent needs a name"; agents="$agents$2$nl"; shift 2 ;;
-    --dir) [ $# -ge 2 ] || fail "--dir needs a path"; targets="$targets$2$nl"; shift 2 ;;
+    --dir)
+      [ $# -ge 2 ] || fail "--dir needs a path"
+      case "$2" in *"$nl"*) fail "--dir paths cannot contain a newline" ;; esac
+      targets="$targets$2$nl"; shift 2 ;;
     --link) mode='link'; shift ;;
     --copy) mode='copy'; shift ;;
     --force) force=1; shift ;;
@@ -138,18 +142,18 @@ fi
 
 # The folders to install into: the named harnesses and folders, or every
 # harness present.
-known=$(harnesses)
+case "$HOME${CODEX_HOME:-}" in *"$nl"*) fail "HOME and CODEX_HOME cannot contain a newline" ;; esac
 for a in $agents; do
-  line=$(printf '%s\n' "$known" | awk -F'|' -v a="$a" '$1 == a')
-  [ -n "$line" ] || fail "unknown harness $a (see --help)"
-  targets="$targets$(printf '%s' "$line" | cut -d'|' -f2)$nl"
+  folder=$(skills_folder "$a") || fail "unknown harness $a (see --help)"
+  targets="$targets$folder$nl"
 done
 if [ -z "$targets" ]; then
-  for line in $known; do
-    if [ -d "$(printf '%s' "$line" | cut -d'|' -f3)" ]; then
-      targets="$targets$(printf '%s' "$line" | cut -d'|' -f2)$nl"
-    fi
+  IFS=' '
+  for a in $HARNESSES; do
+    folder=$(skills_folder "$a")
+    if [ -d "$(dirname -- "$folder")" ]; then targets="$targets$folder$nl"; fi
   done
+  IFS=$nl
 fi
 [ -n "$targets" ] || fail "no agent harness found; name one with --agent or a folder with --dir"
 
