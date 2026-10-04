@@ -201,6 +201,9 @@ back_up() {
 
 for target in $targets; do
   target=${target%/}
+  if [ -d "$target" ] && [ "$(cd "$target" && pwd -P)" = "$(cd "$source_dir" && pwd -P)" ]; then
+    fail "$target is where the skills come from; install somewhere else"
+  fi
   for s in $skills; do
     dest="$target/$s"
     if [ "$uninstall" = 1 ]; then
