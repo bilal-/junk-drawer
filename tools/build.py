@@ -231,7 +231,7 @@ def outputs():
     return {
         ".claude-plugin/marketplace.json": render(claude_marketplace()),
         "gemini-extension.json": render(gemini_extension()),
-        "README.md": readme(),
+        "README.md": readme((ROOT / "README.md").read_text(), DRAWER["skills"]),
     }
 
 
@@ -243,12 +243,11 @@ SKILLS_START = "<!-- skills: written by tools/build.py from drawer.json -->\n"
 SKILLS_END = "<!-- /skills -->"
 
 
-def readme():
-    """README.md with its skills table rewritten from drawer.json."""
-    text = (ROOT / "README.md").read_text()
+def readme(text, skills):
+    """README.md's text with its skills table rewritten from these skills."""
     before, _, rest = text.partition(SKILLS_START)
     _, _, after = rest.partition(SKILLS_END)
-    rows = [f"| [`{s['name']}`](skills/{s['name']}/SKILL.md) | {s['summary']} |" for s in DRAWER["skills"]]
+    rows = [f"| [`{s['name']}`](skills/{s['name']}/SKILL.md) | {s['summary']} |" for s in skills]
     table = "\n".join(["| Skill | What it does |", "| --- | --- |", *rows]) + "\n"
     return before + SKILLS_START + table + SKILLS_END + after
 
