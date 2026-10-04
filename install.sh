@@ -186,7 +186,7 @@ for target in $targets; do
   for s in $skills; do
     dest="$target/$s"
     if [ "$uninstall" = 1 ]; then
-      if ours "$dest" 2>/dev/null; then
+      if ours "$dest"; then
         say "remove $dest"; run rm -rf "$dest"
       elif [ -f "$dest/$MARK" ]; then
         say "$dest has changed since it was installed"; back_up "$dest"
