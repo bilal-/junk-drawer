@@ -449,7 +449,7 @@ class Package:
                 base + '/Private Configuration',
                 'Private local files. FILES.json records original paths and usage.\n'
                 'Names beginning dot- represent original dotfiles, which are renamed here for\n'
-                'visibility during folder upload. Restore their exact original names.\n'
+                'visibility when browsing or copying. Restore their exact original names.\n'
                 'These files may contain development-only values; do not assume production parity.\n',
             )
         exports = p / 'backups'
@@ -607,9 +607,10 @@ class Package:
             'MISSING-ASSETS.md. Read each project README and original runbooks.\n'
             'This package contains plaintext private credentials and client data.\n'
             'Keep the destination restricted to its owner; never commit it to Git.\n'
-            'Original files were copied and left in place. No upload was performed.\n'
-            'After a manual upload, download the package and run Tools/verify-backup.py\n'
-            'before deleting this local copy. Keep an independent recovery copy.\n'
+            'Original files were copied and left in place. Nothing was copied elsewhere.\n'
+            'Keep it wherever you choose. It holds plaintext secrets, so encrypt any copy\n'
+            'that leaves this computer and keep the passphrase apart from the backup.\n'
+            'Run Tools/verify-backup.py on each copy before deleting this one.\n'
             'Future refreshes should create a new dated destination.\n'
         )
         self.write(

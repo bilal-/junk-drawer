@@ -1,6 +1,6 @@
 ---
 name: project-backup
-description: "Back up project files that Git cannot recover: signing keys, API credentials, private configuration, and persistent state. Audit selected projects or nested workspaces and prepare a documented, verified folder for manual cloud upload or laptop migration."
+description: "Back up project files that Git cannot recover: signing keys, API credentials, private configuration, and persistent state. Audit selected projects or nested workspaces and prepare a documented, verified folder to keep wherever the user chooses or carry to a new computer."
 ---
 
 # Project backup
@@ -55,7 +55,7 @@ a backup of its secret values.
 
 Use account rules from each workspace for any read-only provider inspection.
 Export hosted databases or objects when requested backup scope and account access
-support it. Do not deploy, upload to a cloud drive, rotate keys, grant access,
+support it. Do not deploy, copy the package anywhere, rotate keys, grant access,
 restart services or restore over running data merely to build a backup. Do not
 scrape browser sessions, password managers or an entire keychain. If an identity
 needs an export, identify the particular certificate and private key first.
@@ -81,6 +81,9 @@ dependencies, caches, logs and temporary sockets out. Do not commit the package
 to a source repository.
 
 Report the destination, covered projects, verification result and material gaps.
-For manual cloud upload, tell the user to download the uploaded folder and rerun
-its verifier before deleting the local copy. Do not claim the upload occurred.
+Where the package is kept is the user's choice. Suggest, without insisting:
+keep at least one copy away from this computer; encrypt any copy that leaves
+it, since the files are plaintext (an encrypted disk image, `age` or `gpg`),
+and keep the passphrase somewhere other than the backup; run each copy's
+verifier before deleting the original. Do not claim a copy was made.
 This skill runs when invoked; it does not install a scheduler or monitor projects.

@@ -56,8 +56,8 @@
     },
     {
       "name": "project-backup",
-      "description": "Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, ready for a new laptop or a manual cloud upload.",
-      "version": "1.0.0",
+      "description": "Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, to keep wherever you like or carry to a new laptop.",
+      "version": "1.1.0",
       "author": {
         "name": "Bilal",
         "url": "https://github.com/bilal-"

@@ -38,8 +38,8 @@
     },
     {
       "name": "project-backup",
-      "version": "1.0.0",
-      "summary": "Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, ready for a new laptop or a manual cloud upload.",
+      "version": "1.1.0",
+      "summary": "Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, to keep wherever you like or carry to a new laptop.",
       "category": "Developer Tools",
       "keywords": [
         "backup",
