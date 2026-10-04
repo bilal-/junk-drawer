@@ -86,7 +86,9 @@ while [ $# -gt 0 ]; do
     --dir)
       [ $# -ge 2 ] || fail "--dir needs a path"
       case "$2" in "") fail "--dir needs a path" ;; *"$nl"*) fail "--dir paths cannot contain a newline" ;; esac
-      targets="$targets$2$nl"; shift 2 ;;
+      # A relative path starting with - would read as an option to mkdir and cp.
+      case "$2" in -*) targets="$targets./$2$nl" ;; *) targets="$targets$2$nl" ;; esac
+      shift 2 ;;
     --link) mode='link'; shift ;;
     --copy) mode='copy'; shift ;;
     --force) force=1; shift ;;

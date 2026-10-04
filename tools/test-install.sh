@@ -81,6 +81,10 @@ check "rejects an empty --agent, installing nowhere" '[ "$status" != 0 ] && [ ! 
 rm -rf "$HOME/.codex"
 
 reset
+if (cd "$work" && $shell "$root/install.sh" --dir -dashed --copy unslop) >"$work/out" 2>&1; then status=0; else status=$?; fi
+check "--dir takes a relative path starting with a dash" '[ "$status" = 0 ] && [ -f "$work/-dashed/unslop/SKILL.md" ]'
+
+reset
 mkdir "$skills/unslop" && echo "theirs" >"$skills/unslop/SKILL.md"
 install unslop
 check "skips a skill it did not install" 'grep -q theirs "$skills/unslop/SKILL.md"'
