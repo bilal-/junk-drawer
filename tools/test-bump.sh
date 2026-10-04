@@ -5,13 +5,11 @@ set -eu
 unset CDPATH
 cd "$(dirname "$0")/.."
 root=$(pwd)
-work=$(mktemp -d /tmp/junk-drawer-bump.XXXXXX)
-trap 'rm -rf "$work"' EXIT INT TERM
+# shellcheck source=tools/test-lib.sh
+. tools/test-lib.sh
+scratch bump
 failures=0
-# Run from the pre-commit hook, git points these at the commit in progress;
-# the throwaway repositories must not touch it.
-unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_COMMON_DIR \
-  GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_PREFIX GIT_NAMESPACE
+isolate_git
 export GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@example.com
 export GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@example.com
 

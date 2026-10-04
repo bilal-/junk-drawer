@@ -4,10 +4,10 @@
 set -eu
 unset CDPATH
 cd "$(dirname "$0")/.."
-work=$(mktemp -d /tmp/junk-drawer-tools.XXXXXX)
-trap 'rm -rf "$work"' EXIT INT TERM
-unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_COMMON_DIR \
-  GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_PREFIX GIT_NAMESPACE
+# shellcheck source=tools/test-lib.sh
+. tools/test-lib.sh
+scratch tools
+isolate_git
 failures=0
 fail() { echo "FAIL: $1"; failures=$((failures + 1)); }
 

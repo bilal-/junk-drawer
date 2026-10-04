@@ -6,9 +6,9 @@ set -eu
 unset CDPATH
 cd "$(dirname "$0")/.."
 shell=${1:-sh}
-# A fixed template, so an odd TMPDIR cannot put the throwaway home anywhere else.
-work=$(mktemp -d /tmp/junk-drawer-test.XXXXXX)
-trap 'rm -rf "$work"' EXIT INT TERM
+# shellcheck source=tools/test-lib.sh
+. tools/test-lib.sh
+scratch test
 # The tests run a copy of the drawer, so a broken installer cannot touch this one.
 root="$work/drawer"
 mkdir "$root" && cp -R install.sh drawer.json skills "$root/"
