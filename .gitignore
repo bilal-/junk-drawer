@@ -1,2 +1,30 @@
 .DS_Store
 __pycache__/
+
+# Nothing private belongs here. These match what project-backup treats as
+# private, so a key, an env file, or a backup made while testing in this
+# checkout cannot be committed by accident.
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.dev.vars*
+*.p8
+*.p12
+*.jks
+*.keystore
+*.mobileprovision
+*.pem
+*.key
+*service-account*.json
+*service_account*.json
+*firebase-adminsdk*.json
+google-services.json
+GoogleService-Info.plist
+key.properties
+# project-backup's inventories, profiles, and backups.
+*inventory*.json
+*backup-profile*.json
+SHA256SUMS.txt
+MANIFEST.json
