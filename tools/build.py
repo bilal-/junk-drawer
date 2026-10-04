@@ -127,12 +127,17 @@ def git(*args):
 
 
 def published():
-    """The commit users last received: this branch's upstream, or, for a branch
-    that has none yet, the remote's default branch. None with no remote."""
-    for ref in ("@{upstream}", "origin/HEAD", "origin/main"):
-        commit = git("rev-parse", "--verify", "-q", ref).stdout.strip()
-        if commit:
-            return commit
+    """The published commit this work starts from: where it left this branch's
+    upstream or, for a branch with none yet, a remote's default branch (origin
+    first). Changes made since on the published side are not this work's.
+    None with no remote."""
+    remotes = git("remote").stdout.split()
+    remotes.sort(key=lambda remote: remote != "origin")
+    for ref in ["@{upstream}", *(f"{remote}/HEAD" for remote in remotes)]:
+        if git("rev-parse", "--verify", "-q", ref).returncode == 0:
+            base = git("merge-base", "HEAD", ref).stdout.strip()
+            if base:
+                return base
     return None
 
 
