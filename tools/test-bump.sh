@@ -2,6 +2,7 @@
 # Tests build.py's version-bump check against real git histories, in a
 # throwaway folder: each case is a published repository and a clone of it.
 set -eu
+unset CDPATH
 cd "$(dirname "$0")/.."
 root=$(pwd)
 work=$(mktemp -d /tmp/junk-drawer-bump.XXXXXX)

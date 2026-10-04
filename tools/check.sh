@@ -1,9 +1,11 @@
 #!/bin/sh
 # Every check the drawer has. Runs before each commit (tools/setup.sh).
 set -eu
+unset CDPATH
 cd "$(dirname "$0")/.."
 python3 tools/build.py --check
 python3 tools/test-build.py
+tools/test-tools.sh
 tools/test-bump.sh
 if command -v shellcheck >/dev/null 2>&1; then
   shellcheck -s sh install.sh tools/*.sh

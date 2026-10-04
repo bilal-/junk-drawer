@@ -3,6 +3,7 @@
 #   tools/test-install.sh [shell]    (default: sh; try dash or "bash --posix")
 # shellcheck disable=SC2016,SC2034 # check() evaluates its expressions, and $status, later
 set -eu
+unset CDPATH
 cd "$(dirname "$0")/.."
 shell=${1:-sh}
 # A fixed template, so an odd TMPDIR cannot put the throwaway home anywhere else.
