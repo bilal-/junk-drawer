@@ -11,7 +11,9 @@ Evidence key:
 
 Most numeric thresholds in this field (3 seconds, 24 pt, 6x6, 250 words, 45 to 90 characters) are practitioner numbers that nobody has tested. The skill treats them as review triggers, not laws.
 
-## 1. Verdict on the current skill
+## 1. Verdict on the skill before this research
+
+This judges `skills/docsmith/SKILL.md` as it stood before commit `73244f9`, which adopted these findings. Read it as the reason for that revision, not a description of the skill today.
 
 ### Supported
 

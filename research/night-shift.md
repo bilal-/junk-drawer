@@ -284,7 +284,9 @@ mistake; step back to green) generalizes: revert to the last green commit
 rather than debug a pile of changes. Keep commits small so bisect and revert
 are cheap (Google small-CLs guide, above). Evidence: moderate.
 
-## 6. How SKILL.md measures up
+## 6. How SKILL.md measured up before this research
+
+This judges `skills/night-shift/SKILL.md` as it stood before commit `8687fd1`, which adopted these findings. Read it as the reason for that revision, not a description of the skill today.
 
 ### Supported
 

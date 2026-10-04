@@ -406,7 +406,9 @@ blanket simplicity rule.
 Evidence: weak to moderate. Useful for naming patterns; none gives rates
 except where tied to the studies above.
 
-## 9. Mapping to the current SKILL.md
+## 9. Mapping to SKILL.md before this research
+
+This judges `skills/unslop/SKILL.md` as it stood before commit `2ec3404`, which adopted these findings. Read it as the reason for that revision, not a description of the skill today.
 
 **Supported**
 - Plain words over fancy ones: Economist (Latinate, polysyllabic), Wikipedia
