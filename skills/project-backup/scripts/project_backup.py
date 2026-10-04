@@ -135,7 +135,8 @@ def discover(roots):
                                      'kind': 'git', 'common_directory': common,
                                      'worktrees': worktrees(p)}
                 continue
-            if MARKERS.intersection(files) and not any(p.is_relative_to(Path(r['path'])) for r in repos.values()):
+            if (MARKERS.intersection(files) and not any(p.is_relative_to(Path(r['path'])) for r in repos.values())
+                    and not any(c['path'] == str(p) for c in components)):
                 components.append({'id': p.name, 'path': str(p), 'root': str(root),
                                    'kind': 'files', 'worktrees': []})
         covered = [Path(r['path']) for r in list(repos.values()) + components]

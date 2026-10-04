@@ -127,6 +127,18 @@ try:
 finally:
     shutil.rmtree(work)
 
+# Two roots, one inside the other, both holding the same non-Git project.
+work = case()
+try:
+    (work / "ws" / "tool").mkdir()
+    (work / "ws" / "tool" / "package.json").write_text("{}")
+    inventory = work / "inventory.json"
+    run(BACKUP, "inventory", "--root", work / "ws", "--root", work / "ws" / "tool", "--output", inventory)
+    ids = [p["id"] for p in json.loads(inventory.read_text())["projects"]]
+    check("overlapping roots list a non-Git project once", ids.count("tool") + sum(i.startswith("tool-") for i in ids) == 1, str(ids))
+finally:
+    shutil.rmtree(work)
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:
