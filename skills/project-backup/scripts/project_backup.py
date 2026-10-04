@@ -477,8 +477,9 @@ def main():
     profile = json.loads(expand(args.profile).read_text())
     if profile.get('schema_version') != 1: raise ValueError('Unsupported profile schema')
     dest = expand(args.destination)
-    for root in profile['roots']:
-        if dest.is_relative_to(expand(root)) or expand(root).is_relative_to(dest):
+    # The backup must not land inside anything it copies, or it copies itself.
+    for source in profile['roots'] + [area['source'] for area in profile.get('loose_areas', [])]:
+        if dest.is_relative_to(expand(source)) or expand(source).is_relative_to(dest):
             raise ValueError('Source and destination must be separate trees')
     inventory = discover(profile['roots']); package = Package(dest, args.extend)
     for project in inventory['projects']:

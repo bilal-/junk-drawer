@@ -139,6 +139,19 @@ try:
 finally:
     shutil.rmtree(work)
 
+# A folder to copy that contains the backup's own destination.
+work = case()
+try:
+    (work / "state").mkdir()
+    (work / "state" / "settings.ini").write_text("x=1\n")
+    out = work / "state" / "backup"
+    area = {"source": str(work / "state"), "destination": "Tools/state", "description": "Tool state.", "restore": "Copy back."}
+    result = run(BACKUP, "build", "--profile", profile(work, loose_areas=[area]), "--destination", out)
+    check("build refuses a destination inside a folder it copies", result.returncode != 0 and not out.exists(),
+          result.stderr.strip())
+finally:
+    shutil.rmtree(work)
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:
