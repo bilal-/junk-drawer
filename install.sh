@@ -153,12 +153,14 @@ run() {
 }
 
 # Everything in a copied skill, as its marker records it: each file with its
-# checksum, each link with its target, each folder by name.
+# checksum, each link with its target, each folder by name, anything else
+# (a pipe, say) by name without opening it.
 contents() {
   (cd "$1" && find . ! -name . ! -name "$MARK" | LC_ALL=C sort | while IFS= read -r f; do
     if [ -L "$f" ]; then printf 'link %s -> %s\n' "$f" "$(readlink "$f")"
     elif [ -d "$f" ]; then printf 'dir %s\n' "$f"
-    else printf 'file %s %s\n' "$(cksum <"$f" | awk '{print $1, $2}')" "$f"
+    elif [ -f "$f" ]; then printf 'file %s %s\n' "$(cksum <"$f" | awk '{print $1, $2}')" "$f"
+    else printf 'other %s\n' "$f"
     fi
   done)
 }

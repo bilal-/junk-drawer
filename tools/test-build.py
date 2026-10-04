@@ -21,6 +21,9 @@ REJECTED = {
     "a sequence item": "description: - text\n",
     "an unknown escape": 'description: "bad\\q"\n',
     "single quotes": "description: 'it''s'\n",
+    "a bare number": "description: 123\n",
+    "a bare hex number": "description: 0x12\n",
+    "a bare y": "description: y\n",
 }
 READ = {
     'description: "Say \\"hi\\" here"\n': 'Say "hi" here',

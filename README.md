@@ -77,7 +77,7 @@ a `references/` folder it reads). From a download of the repository:
 
 ```sh
 curl -fsSL https://codeload.github.com/bilal-/junk-drawer/tar.gz/main | tar -xz
-cp -R junk-drawer-main/skills/docsmith ~/.claude/skills/
+mkdir -p ~/.claude/skills && cp -R junk-drawer-main/skills/docsmith ~/.claude/skills/
 ```
 
 For one project instead of your user, most harnesses read the same folder

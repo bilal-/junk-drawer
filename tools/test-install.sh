@@ -46,6 +46,11 @@ install --copy unslop
 ln -s /tmp "$skills/unslop/added-link"
 install --uninstall unslop
 check "uninstall keeps a copy the user added a link to" '[ -L "$skills"/unslop.backup-*/added-link ]'
+rm -rf "$skills"/unslop.backup-*
+install --copy unslop
+mkfifo "$skills/unslop/added-pipe"
+install --uninstall unslop
+check "uninstall keeps a copy the user added a pipe to, without reading it" '[ -p "$skills"/unslop.backup-*/added-pipe ]'
 
 reset
 mkdir "$skills/unslop" && echo "theirs" >"$skills/unslop/SKILL.md"

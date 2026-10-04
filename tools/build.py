@@ -31,9 +31,12 @@ EVERYTHING = "the-whole-drawer"
 
 # Frontmatter here is a strict subset of YAML, so it reads the same in every
 # harness without a YAML library: one field per line, and each value either a
-# bare word of lowercase letters, digits, and hyphens, or a double-quoted
+# bare word of lowercase letters, digits, and hyphens that starts with a letter
+# (so YAML cannot read it as a number), or a double-quoted
 # string written as JSON would write it (which YAML reads the same way).
-BARE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+BARE = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
+# Bare words YAML reads as something other than a string.
+RESERVED = {"true", "false", "null", "yes", "no", "on", "off", "y", "n"}
 
 
 def frontmatter(path):
@@ -48,7 +51,7 @@ def frontmatter(path):
         key, value = key.strip(), value.strip()
         if line.startswith((" ", "\t")) or not sep:
             bad.append(f"continued or unkeyed line {line.strip()!r}")
-        elif BARE.match(value) and value not in ("true", "false", "null", "yes", "no", "on", "off"):
+        elif BARE.match(value) and value not in RESERVED:
             fields[key] = value
         else:
             try:
