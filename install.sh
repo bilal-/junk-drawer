@@ -13,6 +13,8 @@ set -eu
 REPO="bilal-/junk-drawer"
 REF="${JUNK_DRAWER_REF:-main}"
 MARK=".junk-drawer"
+# A CDPATH would make cd print where it went, and send relative paths elsewhere.
+unset CDPATH
 BACKUPS="${JUNK_DRAWER_BACKUPS:-$HOME/.junk-drawer-backups}"
 
 usage() {
@@ -101,7 +103,7 @@ done
 # otherwise a fresh download of the repository.
 here=""
 case "$0" in
-  */install.sh) here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd) ;;
+  */install.sh) here=$(cd -- "$(dirname -- "$0")" && pwd) ;;
 esac
 if [ -n "$here" ] && [ -f "$here/drawer.json" ] && [ -d "$here/skills" ]; then
   source_dir="$here/skills"

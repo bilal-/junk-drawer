@@ -70,6 +70,8 @@ check "rejects an empty --dir" '[ "$status" != 0 ]'
 reset
 install --dir "$root/skills" --force --copy unslop
 check "refuses to install a skill over its own source" '[ "$status" != 0 ] && [ -f "$root/skills/unslop/SKILL.md" ]'
+if (cd "$root" && CDPATH=. $shell ./install.sh --dir skills --force --copy unslop) >"$work/out" 2>&1; then status=0; else status=$?; fi
+check "refuses its own source given as a relative path, whatever CDPATH says" '[ "$status" != 0 ] && [ -f "$root/skills/unslop/SKILL.md" ]'
 
 reset
 mkdir "$skills/unslop" && echo "theirs" >"$skills/unslop/SKILL.md"
