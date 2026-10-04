@@ -76,32 +76,6 @@ def walk_files(root, prune=PRUNE):
                 yield q
 
 
-def jsonc(text):
-    """Strip JSON comments and trailing commas while preserving string contents."""
-    out = []; i = 0; quoted = False; escaped = False
-    while i < len(text):
-        c = text[i]
-        if quoted:
-            out.append(c)
-            if escaped: escaped = False
-            elif c == '\\': escaped = True
-            elif c == '"': quoted = False
-            i += 1; continue
-        if c == '"': quoted = True; out.append(c); i += 1; continue
-        if text[i:i+2] == '//':
-            end = text.find('\n', i + 2); i = len(text) if end < 0 else end; continue
-        if text[i:i+2] == '/*':
-            end = text.find('*/', i + 2)
-            if end < 0: raise ValueError('Unterminated JSON comment')
-            out.append(' '); i = end + 2; continue
-        if c == ',':
-            j = i + 1
-            while j < len(text) and text[j].isspace(): j += 1
-            if j < len(text) and text[j] in '}]': i += 1; continue
-        out.append(c); i += 1
-    return json.loads(''.join(out))
-
-
 def worktrees(path):
     output = git(path, 'worktree', 'list', '--porcelain', '-z').decode('utf-8')
     records = []; current = {}

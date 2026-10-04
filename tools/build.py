@@ -78,6 +78,7 @@ def problems():
     on_disk = sorted(p.name for p in (ROOT / "skills").iterdir() if p.is_dir())
     for name in sorted(set(on_disk) - set(listed)):
         found.append(f"skills/{name} is not listed in drawer.json")
+    versions = {skill["name"]: skill.get("version", "") for skill in DRAWER["skills"]}
     for name in listed:
         skill_md = ROOT / "skills" / name / "SKILL.md"
         if not skill_md.exists():
@@ -90,7 +91,7 @@ def problems():
         found += [f"{skill_md.relative_to(ROOT)} frontmatter: {problem}" for problem in bad]
         if fields.get("name") != name:
             found.append(f"{skill_md.relative_to(ROOT)}: name is {fields.get('name')!r}, its folder is {name!r}")
-        if not VERSION.match(skill_entry(name).get("version", "")):
+        if not VERSION.match(versions[name]):
             found.append(f"{name}: drawer.json needs a version like 1.0.0")
         if not NAME.match(name) or len(name) > MAX_NAME:
             found.append(f"{name}: names are lowercase words joined by hyphens, at most {MAX_NAME} characters")
@@ -100,10 +101,6 @@ def problems():
         elif len(description) > MAX_DESCRIPTION:
             found.append(f"{skill_md.relative_to(ROOT)}: description is {len(description)} characters, at most {MAX_DESCRIPTION}")
     return found + unbumped()
-
-
-def skill_entry(name):
-    return next(skill for skill in DRAWER["skills"] if skill["name"] == name)
 
 
 def version_key(version):
