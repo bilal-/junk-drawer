@@ -12,6 +12,7 @@ export HOME="$work/a home"
 unset CODEX_HOME
 skills="$HOME/.claude/skills"
 backups="$HOME/.junk-drawer-backups"
+export JUNK_DRAWER_BACKUPS="$backups"
 failures=0
 
 # Runs install.sh and keeps its exit status in $status, so a failure is
