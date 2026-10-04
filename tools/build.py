@@ -127,46 +127,41 @@ def git(*args):
 
 
 def published():
-    """The published commit this work starts from: where it left this branch's
-    upstream or, for a branch with none, the remote branch it shares the most
-    history with, which is the one it was made from. Changes made since on the
-    published side are not this work's. None with no remote."""
-    upstream = git("merge-base", "HEAD", "@{upstream}").stdout.strip()
-    if upstream:
-        return upstream
-    # Every remote branch is a candidate: a clone may not record which is the
-    # default, and guessing by name picks the wrong one when both main and
-    # master exist.
-    refs = git("for-each-ref", "--format=%(refname)", "refs/remotes").stdout.split()
+    """Every published commit this work could start from: where it left its
+    upstream, and where it left each remote branch. Changes made since on the
+    published side are not this work's.
+
+    All of them, rather than one: a clone may not record which remote branch
+    is the default, and every way of guessing has a case it gets wrong.
+    """
+    refs = ["@{upstream}", *git("for-each-ref", "--format=%(refname)", "refs/remotes").stdout.split()]
     bases = {git("merge-base", "HEAD", ref).stdout.strip() for ref in refs if not ref.endswith("/HEAD")}
     bases.discard("")
-    if not bases:
-        return None
-    return max(bases, key=lambda base: int(git("rev-list", "--count", base).stdout.strip() or 0))
+    return sorted(bases)
 
 
 def unbumped():
-    """Skills changed since what users last received whose version has not gone up.
+    """Skills changed since a published commit whose version has not gone up since.
 
     Users update when a skill's version changes, so a change without a bump
     never reaches them. One bump covers any number of commits before a push.
     """
-    base = published()
-    if not base:
-        return []
-    shown = git("show", f"{base}:drawer.json")
-    if shown.returncode:
-        return []
-    before = {s["name"]: s.get("version", "") for s in json.loads(shown.stdout)["skills"]}
     now = {s["name"]: s.get("version", "") for s in DRAWER["skills"]}
-    changed = [
-        name for name in now
-        if git("diff", "--quiet", base, "--", f"skills/{name}").returncode
-        or git("ls-files", "--others", "--exclude-standard", "--", f"skills/{name}").stdout
-    ]
+    found = set()
+    for base in published():
+        shown = git("show", f"{base}:drawer.json")
+        if shown.returncode:
+            continue
+        before = {s["name"]: s.get("version", "") for s in json.loads(shown.stdout)["skills"]}
+        changed = [
+            name for name in now
+            if git("diff", "--quiet", base, "--", f"skills/{name}").returncode
+            or git("ls-files", "--others", "--exclude-standard", "--", f"skills/{name}").stdout
+        ]
+        found.update((name, before[name]) for name in needs_bump(changed, before, now))
     return [
-        f"skills/{name} changed since it was last published, but its version in drawer.json is still {before[name]}: raise it"
-        for name in needs_bump(changed, before, now)
+        f"skills/{name} changed since it was last published at {version}, but its version in drawer.json has not gone up: raise it"
+        for name, version in sorted(found)
     ]
 
 
