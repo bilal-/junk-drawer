@@ -1,0 +1,94 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "junk-drawer",
+  "description": "Where useful agent skills end up. Works with Claude Code, Codex, Gemini CLI, and most other agent harnesses.",
+  "owner": {
+    "name": "Bilal",
+    "url": "https://github.com/bilal-"
+  },
+  "plugins": [
+    {
+      "name": "docsmith",
+      "description": "Reviews a deck, spreadsheet, or formatted document for layout, visual quality, editability, and formulas. Fixes the small things, flags the big ones.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Bilal",
+        "url": "https://github.com/bilal-"
+      },
+      "homepage": "https://github.com/bilal-/junk-drawer/tree/main/skills/docsmith",
+      "category": "productivity",
+      "keywords": [
+        "documents",
+        "presentations",
+        "spreadsheets",
+        "review"
+      ],
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/docsmith"
+      ]
+    },
+    {
+      "name": "night-shift",
+      "description": "Reviews, fixes, and refactors a codebase in rounds, with a second model as reviewer, until a round comes back clean. Built to run while you sleep.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Bilal",
+        "url": "https://github.com/bilal-"
+      },
+      "homepage": "https://github.com/bilal-/junk-drawer/tree/main/skills/night-shift",
+      "category": "developer-tools",
+      "keywords": [
+        "code-review",
+        "refactoring",
+        "testing",
+        "automation"
+      ],
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/night-shift"
+      ]
+    },
+    {
+      "name": "unslop",
+      "description": "Makes a draft read like a person wrote it: strips chat residue, checks facts and story, cuts the patterns that mark text as machine-written, keeps the writer's voice.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Bilal",
+        "url": "https://github.com/bilal-"
+      },
+      "homepage": "https://github.com/bilal-/junk-drawer/tree/main/skills/unslop",
+      "category": "writing",
+      "keywords": [
+        "writing",
+        "editing",
+        "style",
+        "prose"
+      ],
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/unslop"
+      ]
+    },
+    {
+      "name": "the-whole-drawer",
+      "description": "Every skill in the drawer at once.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Bilal",
+        "url": "https://github.com/bilal-"
+      },
+      "homepage": "https://github.com/bilal-/junk-drawer",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/docsmith",
+        "./skills/night-shift",
+        "./skills/unslop"
+      ]
+    }
+  ]
+}

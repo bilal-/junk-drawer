@@ -1,0 +1,32 @@
+{
+  "name": "junk-drawer",
+  "displayName": "Junk Drawer",
+  "description": "Where useful agent skills end up. Works with Claude Code, Codex, Gemini CLI, and most other agent harnesses.",
+  "version": "0.1.0",
+  "owner": {
+    "name": "Bilal",
+    "url": "https://github.com/bilal-"
+  },
+  "repository": "https://github.com/bilal-/junk-drawer",
+  "license": "MIT",
+  "skills": [
+    {
+      "name": "docsmith",
+      "summary": "Reviews a deck, spreadsheet, or formatted document for layout, visual quality, editability, and formulas. Fixes the small things, flags the big ones.",
+      "category": "Productivity",
+      "keywords": ["documents", "presentations", "spreadsheets", "review"]
+    },
+    {
+      "name": "night-shift",
+      "summary": "Reviews, fixes, and refactors a codebase in rounds, with a second model as reviewer, until a round comes back clean. Built to run while you sleep.",
+      "category": "Developer Tools",
+      "keywords": ["code-review", "refactoring", "testing", "automation"]
+    },
+    {
+      "name": "unslop",
+      "summary": "Makes a draft read like a person wrote it: strips chat residue, checks facts and story, cuts the patterns that mark text as machine-written, keeps the writer's voice.",
+      "category": "Writing",
+      "keywords": ["writing", "editing", "style", "prose"]
+    }
+  ]
+}
