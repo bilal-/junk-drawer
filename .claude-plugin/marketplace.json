@@ -55,6 +55,29 @@
       ]
     },
     {
+      "name": "project-backup",
+      "description": "Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, ready for a new laptop or a manual cloud upload.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Bilal",
+        "url": "https://github.com/bilal-"
+      },
+      "homepage": "https://github.com/bilal-/junk-drawer/tree/main/skills/project-backup",
+      "category": "developer-tools",
+      "keywords": [
+        "backup",
+        "credentials",
+        "signing-keys",
+        "migration",
+        "recovery"
+      ],
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/project-backup"
+      ]
+    },
+    {
       "name": "unslop",
       "description": "Makes a draft read like a person wrote it: strips chat residue, checks facts and story, cuts the patterns that mark text as machine-written, keeps the writer's voice.",
       "version": "1.0.0",
@@ -89,6 +112,7 @@
       "skills": [
         "./skills/docsmith",
         "./skills/night-shift",
+        "./skills/project-backup",
         "./skills/unslop"
       ]
     }

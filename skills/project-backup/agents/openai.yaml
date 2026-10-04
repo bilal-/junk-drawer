@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Backup"
+  short_description: "Back up signing keys, credentials and private config"
+  default_prompt: "Use $project-backup to prepare a private recovery folder for my chosen projects."

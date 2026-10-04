@@ -37,6 +37,19 @@
       ]
     },
     {
+      "name": "project-backup",
+      "version": "1.0.0",
+      "summary": "Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, ready for a new laptop or a manual cloud upload.",
+      "category": "Developer Tools",
+      "keywords": [
+        "backup",
+        "credentials",
+        "signing-keys",
+        "migration",
+        "recovery"
+      ]
+    },
+    {
       "name": "unslop",
       "version": "1.0.0",
       "summary": "Makes a draft read like a person wrote it: strips chat residue, checks facts and story, cuts the patterns that mark text as machine-written, keeps the writer's voice.",

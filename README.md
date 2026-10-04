@@ -15,6 +15,7 @@ harnesses. Install one, or the whole drawer.
 | --- | --- |
 | [`docsmith`](skills/docsmith/SKILL.md) | Reviews or builds decks, spreadsheets, documents, Markdown, and wiki pages: structure, layout, accessibility, editability, formulas, and charts. Follows your DESIGN.md, brand, or template. Fixes the small things, flags the big ones. |
 | [`night-shift`](skills/night-shift/SKILL.md) | Reviews, fixes, and refactors a codebase in rounds, with a second model as reviewer, until a round comes back clean. Built to run while you sleep. |
+| [`project-backup`](skills/project-backup/SKILL.md) | Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, ready for a new laptop or a manual cloud upload. |
 | [`unslop`](skills/unslop/SKILL.md) | Makes a draft read like a person wrote it: strips chat residue, checks facts and story, cuts the patterns that mark text as machine-written, keeps the writer's voice. |
 <!-- /skills -->
 
