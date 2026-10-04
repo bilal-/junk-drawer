@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "docsmith",
-      "description": "Reviews a deck, spreadsheet, or formatted document for layout, visual quality, editability, and formulas. Fixes the small things, flags the big ones.",
+      "description": "Reviews or builds decks, spreadsheets, documents, Markdown, and wiki pages: structure, layout, accessibility, editability, formulas, and charts. Follows your DESIGN.md, brand, or template. Fixes the small things, flags the big ones.",
       "version": "0.1.0",
       "author": {
         "name": "Bilal",
@@ -21,7 +21,10 @@
         "documents",
         "presentations",
         "spreadsheets",
-        "review"
+        "markdown",
+        "wikis",
+        "design",
+        "accessibility"
       ],
       "source": "./",
       "strict": false,

@@ -128,10 +128,11 @@ def gemini_extension():
 
 
 def outputs():
-    """Each generated file and what it should hold."""
+    """Each generated file, or generated part of one, and what it should hold."""
     return {
-        ".claude-plugin/marketplace.json": claude_marketplace(),
-        "gemini-extension.json": gemini_extension(),
+        ".claude-plugin/marketplace.json": render(claude_marketplace()),
+        "gemini-extension.json": render(gemini_extension()),
+        "README.md": readme(),
     }
 
 
@@ -139,12 +140,25 @@ def render(value):
     return json.dumps(value, indent=2, ensure_ascii=False) + "\n"
 
 
+SKILLS_START = "<!-- skills: written by tools/build.py from drawer.json -->\n"
+SKILLS_END = "<!-- /skills -->"
+
+
+def readme():
+    """README.md with its skills table rewritten from drawer.json."""
+    text = (ROOT / "README.md").read_text()
+    before, _, rest = text.partition(SKILLS_START)
+    _, _, after = rest.partition(SKILLS_END)
+    rows = [f"| [`{s['name']}`](skills/{s['name']}/SKILL.md) | {s['summary']} |" for s in DRAWER["skills"]]
+    table = "\n".join(["| Skill | What it does |", "| --- | --- |", *rows]) + "\n"
+    return before + SKILLS_START + table + SKILLS_END + after
+
+
 def main():
     check = "--check" in sys.argv[1:]
     found = problems()
-    for path, value in outputs().items():
+    for path, text in outputs().items():
         target = ROOT / path
-        text = render(value)
         if check:
             if not target.exists() or target.read_text() != text:
                 found.append(f"{path} is out of date: run tools/build.py")
