@@ -377,7 +377,8 @@ class Package:
         self.write_json('WORKSPACE-INVENTORY.json', inventory, replace=(self.root / 'WORKSPACE-INVENTORY.json').exists())
         lines = ['# Projects in this recovery package', '', '| Project | Source | Folder |', '| --- | --- | --- |']
         known = {r['folder'] for r in self.project_index}
-        for p in sorted((self.root / 'Projects').iterdir()):
+        projects_folder = self.root / 'Projects'
+        for p in sorted(projects_folder.iterdir() if projects_folder.is_dir() else []):
             if p.is_dir() and str(p.relative_to(self.root)) not in known:
                 prefix = str(p.relative_to(self.root)) + '/'
                 source = next((v.get('source') for k, v in self.sources.items() if k.startswith(prefix) and 'git-bundle' in v.get('kind', '') and v.get('source')), 'Existing package or reviewed archive')

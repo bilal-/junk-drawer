@@ -117,6 +117,16 @@ try:
 finally:
     shutil.rmtree(work)
 
+# A backup of credentials alone, with every project excluded.
+work = case()
+try:
+    out = work / "out" / "backup"
+    result = run(BACKUP, "build", "--profile", profile(work, projects={"app": {"exclude": True}}, shared_files=[shared_key(work)]),
+                 "--destination", out)
+    check("build works with no projects in scope", result.returncode == 0, result.stderr.strip())
+finally:
+    shutil.rmtree(work)
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:
