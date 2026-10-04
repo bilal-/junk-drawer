@@ -156,6 +156,12 @@ try:
     result = run(BACKUP, "build", "--profile", profile(work, loose_areas=[area]), "--destination", out)
     check("build refuses a destination inside a folder it copies", result.returncode != 0 and not out.exists(),
           result.stderr.strip())
+    # The same destination named another way, as macOS names /tmp and /var through /private.
+    alias = Path(os.path.realpath(out))
+    if alias != out:
+        result = run(BACKUP, "build", "--profile", profile(work, loose_areas=[area]), "--destination", alias)
+        check("build refuses it when the destination is named through a link", result.returncode != 0 and not out.exists(),
+              result.stderr.strip())
 finally:
     shutil.rmtree(work)
 

@@ -720,8 +720,11 @@ def main():
         raise ValueError('Unsupported profile schema')
     dest = expand(args.destination)
     # The backup must not land inside anything it copies, or it copies itself.
+    # Compare real paths: a link (macOS's /tmp, say) can name the same folder twice.
+    real_dest = dest.resolve()
     for source in profile['roots'] + [area['source'] for area in profile.get('loose_areas', [])]:
-        if dest.is_relative_to(expand(source)) or expand(source).is_relative_to(dest):
+        real_source = expand(source).resolve()
+        if real_dest.is_relative_to(real_source) or real_source.is_relative_to(real_dest):
             raise ValueError('Source and destination must be separate trees')
     inventory = discover(profile['roots'])
     package = Package(dest, args.extend)
