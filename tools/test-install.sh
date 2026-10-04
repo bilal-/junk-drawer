@@ -5,10 +5,12 @@
 set -eu
 cd "$(dirname "$0")/.."
 shell=${1:-sh}
-root=$(pwd)
 # A fixed template, so an odd TMPDIR cannot put the throwaway home anywhere else.
 work=$(mktemp -d /tmp/junk-drawer-test.XXXXXX)
 trap 'rm -rf "$work"' EXIT INT TERM
+# The tests run a copy of the drawer, so a broken installer cannot touch this one.
+root="$work/drawer"
+mkdir "$root" && cp -R install.sh drawer.json skills "$root/"
 export HOME="$work/a home|with a bar"
 unset CODEX_HOME
 skills="$HOME/.claude/skills"
