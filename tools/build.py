@@ -10,6 +10,7 @@ skill means adding its folder and one entry in drawer.json, then running this.
 Standard library only, so it runs anywhere Python 3 does.
 """
 
+import hashlib
 import json
 import re
 import subprocess
@@ -33,9 +34,6 @@ EVERYTHING = "the-whole-drawer"
 # A skill's version: major.minor.patch.
 VERSION = re.compile(r"^\d+\.\d+\.\d+$")
 
-# Gemini CLI insists on a version, but an extension installed from git updates
-# by commit, so this one never needs to change.
-GEMINI_VERSION = "1.0.0"
 
 
 # Frontmatter here is a strict subset of YAML, so it reads the same in every
@@ -128,13 +126,23 @@ def git(*args):
     return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True)
 
 
+def published():
+    """The commit users last received: this branch's upstream, or, for a branch
+    that has none yet, the remote's default branch. None with no remote."""
+    for ref in ("@{upstream}", "origin/HEAD", "origin/main"):
+        commit = git("rev-parse", "--verify", "-q", ref).stdout.strip()
+        if commit:
+            return commit
+    return None
+
+
 def unbumped():
-    """Skills changed since the last push whose version has not gone up.
+    """Skills changed since what users last received whose version has not gone up.
 
     Users update when a skill's version changes, so a change without a bump
     never reaches them. One bump covers any number of commits before a push.
     """
-    base = git("rev-parse", "--verify", "-q", "@{upstream}").stdout.strip()
+    base = published()
     if not base:
         return []
     shown = git("show", f"{base}:drawer.json")
@@ -148,7 +156,7 @@ def unbumped():
         or git("ls-files", "--others", "--exclude-standard", "--", f"skills/{name}").stdout
     ]
     return [
-        f"skills/{name} changed since the last push, but its version in drawer.json is still {before[name]}: raise it"
+        f"skills/{name} changed since it was last published, but its version in drawer.json is still {before[name]}: raise it"
         for name in needs_bump(changed, before, now)
     ]
 
@@ -200,10 +208,16 @@ def claude_marketplace():
 
 
 def gemini_extension():
-    """Gemini CLI's extension: it loads every skill under skills/ by itself."""
+    """Gemini CLI's extension: it loads every skill under skills/ by itself.
+
+    Gemini updates a git install by commit, but a local install only when this
+    version changes, so the version is drawn from every skill's name and
+    version: adding, removing, or raising one changes it.
+    """
+    skills = ",".join(f"{s['name']}@{s['version']}" for s in DRAWER["skills"])
     return {
         "name": DRAWER["name"],
-        "version": GEMINI_VERSION,
+        "version": f"1.0.0+{hashlib.sha256(skills.encode()).hexdigest()[:8]}",
         "description": DRAWER["description"],
     }
 

@@ -33,5 +33,6 @@ any harness. Read this before changing anything.
   its files change, then run `tools/build.py`: marketplace users only receive
   a change when the version moves. Patch for fixes, minor for new behaviour,
   major for a change that breaks how people use it. One raise covers every
-  commit before a push; `check.sh` fails until it is done. The repository has
-  no version of its own.
+  commit before a push; `check.sh` fails until it is done, on any branch. The
+  repository has no version of its own; Gemini's extension version is derived
+  from the skills'.
