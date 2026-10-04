@@ -44,6 +44,21 @@ for text, want in READ.items():
     fields, bad = read(text)
     if bad or fields["description"] != want:
         failures.append(f"misread {text.strip()!r}: {fields['description']!r} {bad}")
+BUMPS = [
+    # changed, before, now, which need a bump
+    (["a"], {"a": "1.0.0"}, {"a": "1.0.0"}, ["a"]),
+    (["a"], {"a": "1.2.0"}, {"a": "1.1.9"}, ["a"]),
+    (["a"], {"a": "1.9.0"}, {"a": "1.10.0"}, []),
+    (["a"], {"a": "1.0.0"}, {"a": "2.0.0"}, []),
+    ([], {"a": "1.0.0"}, {"a": "1.0.0"}, []),
+    (["new"], {}, {"new": "1.0.0"}, []),
+    (["a"], {"a": ""}, {"a": "1.0.0"}, []),
+]
+for changed, before, now, want in BUMPS:
+    got = build.needs_bump(changed, before, now)
+    if got != want:
+        failures.append(f"needs_bump({changed}, {before}, {now}) gave {got}, not {want}")
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:

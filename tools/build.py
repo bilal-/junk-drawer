@@ -12,6 +12,7 @@ Standard library only, so it runs anywhere Python 3 does.
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -25,8 +26,16 @@ NAME = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 MAX_NAME = 64
 MAX_DESCRIPTION = 1024
 
-# Installs every skill at once, for people who want the whole drawer.
+# Installs every skill at once, for people who want the whole drawer. It has
+# no version, so it follows the repository's commits.
 EVERYTHING = "the-whole-drawer"
+
+# A skill's version: major.minor.patch.
+VERSION = re.compile(r"^\d+\.\d+\.\d+$")
+
+# Gemini CLI insists on a version, but an extension installed from git updates
+# by commit, so this one never needs to change.
+GEMINI_VERSION = "1.0.0"
 
 
 # Frontmatter here is a strict subset of YAML, so it reads the same in every
@@ -83,6 +92,8 @@ def problems():
         found += [f"{skill_md.relative_to(ROOT)} frontmatter: {problem}" for problem in bad]
         if fields.get("name") != name:
             found.append(f"{skill_md.relative_to(ROOT)}: name is {fields.get('name')!r}, its folder is {name!r}")
+        if not VERSION.match(skill_entry(name).get("version", "")):
+            found.append(f"{name}: drawer.json needs a version like 1.0.0")
         if not NAME.match(name) or len(name) > MAX_NAME:
             found.append(f"{name}: names are lowercase words joined by hyphens, at most {MAX_NAME} characters")
         description = fields.get("description", "")
@@ -90,7 +101,56 @@ def problems():
             found.append(f"{skill_md.relative_to(ROOT)} has no description")
         elif len(description) > MAX_DESCRIPTION:
             found.append(f"{skill_md.relative_to(ROOT)}: description is {len(description)} characters, at most {MAX_DESCRIPTION}")
-    return found
+    return found + unbumped()
+
+
+def skill_entry(name):
+    return next(skill for skill in DRAWER["skills"] if skill["name"] == name)
+
+
+def version_key(version):
+    return tuple(int(part) for part in version.split("."))
+
+
+def needs_bump(changed, before, now):
+    """The changed skills whose version is not above the one they had before.
+
+    A skill new since then, or from before skills had versions, needs nothing.
+    """
+    return sorted(
+        name for name in changed
+        if before.get(name) and VERSION.match(before[name]) and VERSION.match(now.get(name, ""))
+        and version_key(now[name]) <= version_key(before[name])
+    )
+
+
+def git(*args):
+    return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True)
+
+
+def unbumped():
+    """Skills changed since the last push whose version has not gone up.
+
+    Users update when a skill's version changes, so a change without a bump
+    never reaches them. One bump covers any number of commits before a push.
+    """
+    base = git("rev-parse", "--verify", "-q", "@{upstream}").stdout.strip()
+    if not base:
+        return []
+    shown = git("show", f"{base}:drawer.json")
+    if shown.returncode:
+        return []
+    before = {s["name"]: s.get("version", "") for s in json.loads(shown.stdout)["skills"]}
+    now = {s["name"]: s.get("version", "") for s in DRAWER["skills"]}
+    changed = [
+        name for name in now
+        if git("diff", "--quiet", base, "--", f"skills/{name}").returncode
+        or git("ls-files", "--others", "--exclude-standard", "--", f"skills/{name}").stdout
+    ]
+    return [
+        f"skills/{name} changed since the last push, but its version in drawer.json is still {before[name]}: raise it"
+        for name in needs_bump(changed, before, now)
+    ]
 
 
 def author():
@@ -108,7 +168,7 @@ def claude_marketplace():
         {
             "name": skill["name"],
             "description": skill["summary"],
-            "version": DRAWER["version"],
+            "version": skill["version"],
             "author": author(),
             "homepage": f"{DRAWER['repository']}/tree/main/skills/{skill['name']}",
             "category": skill["category"].lower().replace(" ", "-"),
@@ -123,7 +183,6 @@ def claude_marketplace():
         {
             "name": EVERYTHING,
             "description": "Every skill in the drawer at once.",
-            "version": DRAWER["version"],
             "author": author(),
             "homepage": DRAWER["repository"],
             "source": "./",
@@ -144,7 +203,7 @@ def gemini_extension():
     """Gemini CLI's extension: it loads every skill under skills/ by itself."""
     return {
         "name": DRAWER["name"],
-        "version": DRAWER["version"],
+        "version": GEMINI_VERSION,
         "description": DRAWER["description"],
     }
 
