@@ -100,6 +100,10 @@ try:
     result = run(BACKUP, "build", "--profile", work / "profile.json", "--destination", out)
     check("build refuses an existing backup without --extend", result.returncode != 0 and "--extend" in result.stderr,
           result.stderr.strip())
+    linked = work / "linked-backup"
+    linked.symlink_to(out)
+    result = run(BACKUP, "verify", "--destination", linked)
+    check("verify refuses a backup reached through a link", result.returncode != 0, result.stdout.strip())
     (out / "Credentials/Signing/upload.p12").write_bytes(b"changed")
     result = run(out / "Tools/verify-backup.py", cwd=work)
     check("the packaged verifier catches a changed file", result.returncode != 0 and "upload.p12" in result.stdout)

@@ -667,6 +667,8 @@ def verify(destination):
     """Checks the package against its checksums, as the standalone verifier
     does, and that it is still private: owner-only, a README in every folder."""
     root = expand(destination)
+    if root.is_symlink():
+        raise RuntimeError('Package contains a symlink')
     failures, count = checksum_failures(root)
     if failures:
         raise RuntimeError('Backup integrity failure: ' + ', '.join(failures))
