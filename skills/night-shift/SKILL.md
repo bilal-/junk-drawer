@@ -136,7 +136,10 @@ Reviewer and fixer both use this list. A finding must name which item it is.
 6. **Gate and commit as one chain** that stops at the first failure: format,
    lint, test, commit, then the project's merge gate if it has one, then push
    if allowed. In shell: `lint && test && git commit … && gate && git push`.
-   Never `;` between them: a failed lint must not commit. Keep the working tree
+   Never `;` between them: a failed lint must not commit. The gate comes after
+   the commit only because many gates need a clean tree; if it fails, undo
+   that commit with `git reset --soft HEAD~1` (it is yours and not pushed) and
+   treat it as a failed gate (When things break). Keep the working tree
    still while the gate runs. Run the full suite, not just the new test.
 7. **Write the commit message for a human:** what changed and why, in plain
    words, and whether it changes behaviour. One commit per finding, or per
@@ -172,8 +175,9 @@ Then finish. Say which rule ended the run.
 - **The session dies:** a new session reads `log.md` and `ledger.md`, runs
   `git status` and `git log <start>..`, runs the gate on `HEAD`, and carries on
   from the next round.
-- **Never leave the tree dirty.** Whenever you stop, for any reason, the tree is
-  clean and `HEAD` passes the gate. Uncommitted work that does not pass is
+- **Never leave the tree dirty.** Whenever you stop after the first round has
+  begun, the tree is clean and `HEAD` passes the gate. (If the ground was
+  broken before you started, you stopped without changing anything.) Uncommitted work that does not pass is
   discarded and recorded in the ledger, not left behind.
 
 ## Finishing

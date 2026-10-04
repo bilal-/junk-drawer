@@ -24,7 +24,7 @@ The patterns below are symptoms. Generated text shows most in what it lacks: a s
 
 Work down this list. A higher item wins.
 
-1. Facts, numbers, names, and meaning. Never change them and never invent them.
+1. Facts, numbers, names, and meaning. Never invent them, and change them only to match a source the writer supplied (Pass 1), saying so in the Flags.
 2. The house style and the Always fix tier. Apply these even if the writer's own habits lean the other way.
 3. The writer's voice. It wins over the Fix by default and Light touch tiers, so a clearly personal and readable habit (a passive here, an arrow there) stays.
 4. Brevity and polish. Lowest priority. Never cut or polish at the expense of the items above.
@@ -52,7 +52,7 @@ Slop is writing that is hard or annoying to read because it sounds generated, pa
 ### Always fix
 
 * Dashes: see the house style.
-* Flowery wording: overly elaborate, sophisticated, or slogan like language. Replace it with the plain word.
+* Flowery wording: overly elaborate, or sophisticated language, or language that sounds like a slogan. Replace it with the plain word.
 * Slogan and buzzword lead statements: polished openers that say very little ("In today's fast paced world", "Unlock the power of"). Replace them with the actual point, or cut them.
 * Vague, empty wording: abstract language that carries no real substance. Replace it with precise wording from the supplied material. If there is nothing real to say, cut it.
 * Padding: unnecessary words, repeated points, obvious observations, empty transitions.
@@ -128,7 +128,7 @@ Check:
 * Relevance: each point belongs to the topic and serves the purpose.
 * Completeness: it covers the information this topic and this audience require.
 
-Fix directly: soften or qualify an unsupported claim, correct a number that contradicts the source, remove an irrelevant sentence, fill a small gap using only supplied material.
+Fix directly: soften or qualify an unsupported claim, correct a number that contradicts a supplied source (and flag the correction), remove an irrelevant sentence, fill a small gap using only supplied material.
 
 Flag: a claim that cannot be verified, a source that contradicts a main point, key information or a needed specific that is missing, or content that needs an overhaul.
 
@@ -170,4 +170,4 @@ Edit lightly. Change only what weakens clarity, credibility, or flow. The number
 
 One last read of the opening, transitions, sentence flow, paragraph endings, and tone. Replace only the weak spots that feel templated. Check grammar and spelling. Reread your own edits for tics you introduced: colons where dashes were, new triples, synonyms, fragments, or contrast framing.
 
-Then confirm these: no dashes remain (except the allowed cases), no chat residue or tool artifact remains, no fact has changed, nothing was invented, no imperative titles remain (except the allowed cases), no watchlist pattern remains that says nothing, and no made up number is presented as real. Finish with the Flags list if there is one.
+Then confirm these: no dashes remain (except the allowed cases), no chat residue or tool artifact remains, no fact has changed except corrections to a supplied source, each flagged, nothing was invented, no imperative titles remain (except the allowed cases), no watchlist pattern remains that says nothing, and no made up number is presented as real. Finish with the Flags list if there is one.

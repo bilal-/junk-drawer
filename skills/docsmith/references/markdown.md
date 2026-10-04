@@ -60,7 +60,7 @@ Flag a page that mixes them (a tutorial that turns into a reference table, a ref
 ## Docs as code
 
 * Docs change in the same commit as the code they describe.
-* Delete docs that are wrong or dead; wrong docs are worse than none. Flag rather than delete if unsure.
+* Wrong or dead docs are worse than none. Flag them, naming what is wrong, for the author to fix or delete; delete only when asked.
 * Suggest a linter (markdownlint), a link checker (such as lychee), and a prose linter (such as Vale) in CI if the repo has none. Do not add them unasked.
 
 ## Common fixes and flags
