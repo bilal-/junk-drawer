@@ -58,6 +58,12 @@ install --uninstall unslop
 check "uninstall keeps a copy the user added a pipe to, without reading it" '[ -p "$backups"/unslop-*/added-pipe ]'
 
 reset
+install --copy docsmith
+echo "mine" >"$skills/docsmith/references/.junk-drawer"
+install --uninstall docsmith
+check "uninstall keeps a copy with a user file named like the marker, deeper down" '[ -f "$backups"/docsmith-*/references/.junk-drawer ]'
+
+reset
 mkdir "$skills/unslop" && echo "theirs" >"$skills/unslop/SKILL.md"
 install unslop
 check "skips a skill it did not install" 'grep -q theirs "$skills/unslop/SKILL.md"'
