@@ -64,6 +64,10 @@ install --uninstall docsmith
 check "uninstall keeps a copy with a user file named like the marker, deeper down" '[ -f "$backups"/docsmith-*/references/.junk-drawer ]'
 
 reset
+install --dir "" --copy unslop
+check "rejects an empty --dir" '[ "$status" != 0 ]'
+
+reset
 mkdir "$skills/unslop" && echo "theirs" >"$skills/unslop/SKILL.md"
 install unslop
 check "skips a skill it did not install" 'grep -q theirs "$skills/unslop/SKILL.md"'

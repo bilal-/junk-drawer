@@ -83,7 +83,7 @@ while [ $# -gt 0 ]; do
     --agent) [ $# -ge 2 ] || fail "--agent needs a name"; agents="$agents$2$nl"; shift 2 ;;
     --dir)
       [ $# -ge 2 ] || fail "--dir needs a path"
-      case "$2" in *"$nl"*) fail "--dir paths cannot contain a newline" ;; esac
+      case "$2" in "") fail "--dir needs a path" ;; *"$nl"*) fail "--dir paths cannot contain a newline" ;; esac
       targets="$targets$2$nl"; shift 2 ;;
     --link) mode='link'; shift ;;
     --copy) mode='copy'; shift ;;
