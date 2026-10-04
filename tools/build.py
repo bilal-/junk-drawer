@@ -128,19 +128,21 @@ def git(*args):
 
 def published():
     """The published commit this work starts from: where it left this branch's
-    upstream or, for a branch with none yet, a remote's default branch (origin
-    first). Changes made since on the published side are not this work's.
-    None with no remote."""
-    remotes = git("remote").stdout.split()
-    remotes.sort(key=lambda remote: remote != "origin")
-    # A clone may not record a remote's default branch, so try the usual names.
-    defaults = [f"{remote}/{branch}" for remote in remotes for branch in ("HEAD", "main", "master")]
-    for ref in ["@{upstream}", *defaults]:
-        if git("rev-parse", "--verify", "-q", ref).returncode == 0:
-            base = git("merge-base", "HEAD", ref).stdout.strip()
-            if base:
-                return base
-    return None
+    upstream or, for a branch with none, the remote branch it shares the most
+    history with, which is the one it was made from. Changes made since on the
+    published side are not this work's. None with no remote."""
+    upstream = git("merge-base", "HEAD", "@{upstream}").stdout.strip()
+    if upstream:
+        return upstream
+    # Every remote branch is a candidate: a clone may not record which is the
+    # default, and guessing by name picks the wrong one when both main and
+    # master exist.
+    refs = git("for-each-ref", "--format=%(refname)", "refs/remotes").stdout.split()
+    bases = {git("merge-base", "HEAD", ref).stdout.strip() for ref in refs if not ref.endswith("/HEAD")}
+    bases.discard("")
+    if not bases:
+        return None
+    return max(bases, key=lambda base: int(git("rev-list", "--count", base).stdout.strip() or 0))
 
 
 def unbumped():
