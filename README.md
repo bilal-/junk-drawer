@@ -88,11 +88,13 @@ inside the project (`.claude/skills/`, `.agents/skills/`); OpenCode reads
 
 | Harness | Add the drawer | Install a skill |
 | --- | --- | --- |
-| Claude Code | `/plugin marketplace add bilal-/junk-drawer` | `/plugin install unslop@junk-drawer` |
+| Claude Code | `/plugin marketplace add https://github.com/bilal-/junk-drawer.git` | `/plugin install unslop@junk-drawer` |
 | Codex | `codex plugin marketplace add bilal-/junk-drawer` | `codex plugin add unslop@junk-drawer` |
 | Gemini CLI | `gemini extensions install https://github.com/bilal-/junk-drawer` | (installs every skill) |
 
-Each skill is its own plugin, and `the-whole-drawer` installs them all.
+Each skill is its own plugin, and `the-whole-drawer` installs them all. Claude Code
+needs the full URL: its `owner/repo` shorthand refuses an owner whose name ends
+in a hyphen.
 
 ## Updating and removing
 

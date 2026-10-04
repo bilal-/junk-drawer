@@ -36,3 +36,6 @@ any harness. Read this before changing anything.
   commit before a push; `check.sh` fails until it is done, on any branch. The
   repository has no version of its own; Gemini's extension version is derived
   from the skills'.
+- **Write the full GitHub URL for Claude Code.** Its `owner/repo` shorthand
+  rejects `bilal-` because the name ends in a hyphen; `npx skills`, Codex,
+  and Gemini accept the shorthand or the URL.
