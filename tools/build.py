@@ -30,9 +30,10 @@ EVERYTHING = "the-whole-drawer"
 
 
 # Frontmatter here is a strict subset of YAML, so it reads the same in every
-# harness without a YAML library: each field on one line, its value plain or
-# wholly quoted. Block scalars (> |), flow collections, and anchors are out.
-SPECIAL = (">", "|", "[", "{", "&", "*", "!", "%", "@", "`")
+# harness without a YAML library: one field per line, and each value either a
+# bare word of lowercase letters, digits, and hyphens, or a double-quoted
+# string written as JSON would write it (which YAML reads the same way).
+BARE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 
 def frontmatter(path):
@@ -44,20 +45,19 @@ def frontmatter(path):
     fields, bad = {}, []
     for line in match.group(1).splitlines():
         key, sep, value = line.partition(":")
-        value = value.strip()
+        key, value = key.strip(), value.strip()
         if line.startswith((" ", "\t")) or not sep:
             bad.append(f"continued or unkeyed line {line.strip()!r}")
-        elif value[:1] in ('"', "'"):
-            quote = value[0]
-            inner = value[1:-1]
-            if len(value) < 2 or value[-1] != quote or (quote == '"' and re.search(r'(?<!\\)"', inner)) or (quote == "'" and re.search(r"(?<!')'(?!')", inner)):
-                bad.append(f"{key.strip()}: a quoted value must be closed, once, at the end of its line")
-            fields[key.strip()] = inner.replace('\\"', '"') if quote == '"' else inner.replace("''", "'")
-        elif value.startswith(SPECIAL) or ": " in value or " #" in value:
-            bad.append(f"{key.strip()}: quote this value; plain YAML would read it differently")
-            fields[key.strip()] = value
+        elif BARE.match(value) and value not in ("true", "false", "null", "yes", "no", "on", "off"):
+            fields[key] = value
         else:
-            fields[key.strip()] = value
+            try:
+                fields[key] = json.loads(value)
+            except ValueError:
+                fields[key] = None
+            if not isinstance(fields[key], str) or not value.startswith('"'):
+                fields[key] = value
+                bad.append(f"{key}: write the value in double quotes, escaped as JSON would")
     return fields, bad
 
 

@@ -1,5 +1,5 @@
 ---
-name: night-shift
+name: "night-shift"
 description: "Review, fix, and refactor a codebase in rounds, unattended, until a round comes back clean or the budget runs out. A second model reviews; every finding is verified before it is acted on; every bug fix gets a test that fails without it; refactors keep behaviour and go in their own commits; a findings ledger stops rounds re-raising rejected findings or undoing each other. Use when asked to review and fix until clean, run a review loop, harden or refactor a codebase, or work through review findings overnight."
 ---
 
@@ -213,7 +213,7 @@ Try, in order, whichever is installed and is not you:
 | Codex | `codex exec --sandbox read-only --cd <repo> "<prompt>" < /dev/null` |
 | Claude Code | `claude -p "<prompt>"` from the repo |
 | Gemini CLI | `gemini -p "<prompt>"` from the repo |
-| Antigravity CLI | `agy --print="<prompt>"` with `--add-dir <repo>` |
+| Antigravity CLI | `agy --add-dir <repo> --print="<prompt>"` |
 | Qwen Code | `qwen -p "<prompt>"` from the repo |
 
 - Always close standard input (`< /dev/null`); some tools wait for input and

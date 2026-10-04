@@ -118,8 +118,10 @@ if [ "$list" = 1 ]; then
   exit 0
 fi
 
-# From here on, loops split lists on newlines only.
+# From here on, loops split lists on newlines only, and never expand a * or ?
+# in a name or path.
 IFS=$nl
+set -f
 
 if [ -z "$skills" ]; then
   skills=$available
@@ -147,13 +149,17 @@ fi
 [ -n "$targets" ] || fail "no agent harness found; name one with --agent or a folder with --dir"
 
 run() {
-  if [ "$dry" = 1 ]; then say "  would: $*"; else "$@"; fi
+  if [ "$dry" = 1 ]; then (IFS=' '; say "  would: $*"); else "$@"; fi
 }
 
-# The files of a copied skill, each with its checksum, as its marker records them.
+# Everything in a copied skill, as its marker records it: each file with its
+# checksum, each link with its target, each folder by name.
 contents() {
-  (cd "$1" && find . -type f ! -name "$MARK" | LC_ALL=C sort | while IFS= read -r f; do
-    printf '%s %s\n' "$(cksum <"$f" | awk '{print $1, $2}')" "$f"
+  (cd "$1" && find . ! -name . ! -name "$MARK" | LC_ALL=C sort | while IFS= read -r f; do
+    if [ -L "$f" ]; then printf 'link %s -> %s\n' "$f" "$(readlink "$f")"
+    elif [ -d "$f" ]; then printf 'dir %s\n' "$f"
+    else printf 'file %s %s\n' "$(cksum <"$f" | awk '{print $1, $2}')" "$f"
+    fi
   done)
 }
 

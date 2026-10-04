@@ -16,11 +16,16 @@ REJECTED = {
     "a bare colon": "description: Use: when asked\n",
     "an open quote": 'description: "half\n',
     "a quote inside quotes": 'description: "a "b" c"\n',
+    "a comment": "description: # note\n",
+    "a boolean": "description: false\n",
+    "a sequence item": "description: - text\n",
+    "an unknown escape": 'description: "bad\\q"\n',
+    "single quotes": "description: 'it''s'\n",
 }
 READ = {
     'description: "Say \\"hi\\" here"\n': 'Say "hi" here',
-    "description: 'it''s fine'\n": "it's fine",
-    "description: plain words, with a comma\n": "plain words, with a comma",
+    'description: "Use C:\\\\tools"\n': "Use C:\\tools",
+    "description: a-bare-word\n": "a-bare-word",
 }
 
 

@@ -2,7 +2,7 @@
   "name": "junk-drawer",
   "displayName": "Junk Drawer",
   "description": "Where useful agent skills end up. Works with Claude Code, Codex, Gemini CLI, and most other agent harnesses.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "owner": {
     "name": "Bilal",
     "url": "https://github.com/bilal-"

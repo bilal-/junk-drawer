@@ -72,12 +72,12 @@ A skill is one folder. Copy it into your harness's skills folder:
 | GitHub Copilot | `~/.copilot/skills/` |
 | Cursor | `~/.cursor/skills/` |
 
-Each skill here is a single file today, so this is enough:
+Copy the whole folder: some skills carry more than `SKILL.md` (docsmith has
+a `references/` folder it reads). From a download of the repository:
 
 ```sh
-mkdir -p ~/.claude/skills/unslop
-curl -fsSL https://raw.githubusercontent.com/bilal-/junk-drawer/main/skills/unslop/SKILL.md \
-  -o ~/.claude/skills/unslop/SKILL.md
+curl -fsSL https://codeload.github.com/bilal-/junk-drawer/tar.gz/main | tar -xz
+cp -R junk-drawer-main/skills/docsmith ~/.claude/skills/
 ```
 
 For one project instead of your user, most harnesses read the same folder
@@ -99,7 +99,7 @@ Each skill is its own plugin, and `the-whole-drawer` installs them all.
 | How you installed | Update | Remove |
 | --- | --- | --- |
 | `npx skills` | `npx skills update` | `npx skills remove unslop -g` (drop `-g` for a project install) |
-| `curl` | run the same command again | add `--uninstall` |
+| `curl` | run the same command again | the same command, ending `sh -s -- --uninstall` |
 | From a checkout (`./install.sh --link`) | `git pull` | `./install.sh --uninstall` |
 | Claude Code | `/plugin marketplace update junk-drawer` | `/plugin uninstall unslop@junk-drawer` |
 | Codex | `codex plugin marketplace upgrade junk-drawer` | `codex plugin remove unslop@junk-drawer` |

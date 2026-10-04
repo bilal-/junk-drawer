@@ -9,6 +9,7 @@ root=$(pwd)
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT INT TERM
 export HOME="$work/a home"
+unset CODEX_HOME
 skills="$HOME/.claude/skills"
 failures=0
 
@@ -40,6 +41,11 @@ check "reinstalls over its own unchanged copy without a backup" '[ -z "$(ls "$sk
 echo "mine" >"$skills/unslop/notes.txt"
 install --uninstall unslop
 check "uninstall keeps a copy the user changed, as a backup" '[ ! -e "$skills/unslop" ] && cat "$skills"/unslop.backup-*/notes.txt | grep -q mine'
+rm -rf "$skills"/unslop.backup-*
+install --copy unslop
+ln -s /tmp "$skills/unslop/added-link"
+install --uninstall unslop
+check "uninstall keeps a copy the user added a link to" '[ -L "$skills"/unslop.backup-*/added-link ]'
 
 reset
 mkdir "$skills/unslop" && echo "theirs" >"$skills/unslop/SKILL.md"
@@ -68,13 +74,17 @@ reset
 install --dir "$work/other place" --copy night-shift
 check "--dir takes a path with a space" '[ -f "$work/other place/night-shift/SKILL.md" ]'
 check "--dir alone installs nowhere else" '[ ! -e "$skills/night-shift" ]'
+mkdir -p "$work/glob/a" "$work/glob/b"
+install --dir "$work/glob/*" --copy night-shift
+check "--dir takes a * literally" '[ -f "$work/glob/*/night-shift/SKILL.md" ] && [ ! -e "$work/glob/a/night-shift" ]'
 
 install unslo.
 check "rejects a skill that does not exist" '[ "$status" != 0 ]'
 install --agent nope
 check "rejects an unknown harness" '[ "$status" != 0 ]'
 reset
-install --dry-run
+install --dry-run --copy unslop
 check "a dry run changes nothing" '[ -z "$(ls -A "$skills")" ]'
+check "a dry run prints each command on one line" 'grep -q "would: cp -R .*unslop" "$work/out"'
 
 if [ "$failures" = 0 ]; then echo "test-install ($shell): ok"; else exit 1; fi
