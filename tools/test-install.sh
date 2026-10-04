@@ -75,6 +75,12 @@ if (cd "$root" && CDPATH=. $shell ./install.sh --dir skills --force --copy unslo
 check "refuses its own source given as a relative path, whatever CDPATH says" '[ "$status" != 0 ] && [ -f "$root/skills/unslop/SKILL.md" ]'
 
 reset
+mkdir -p "$HOME/.codex"
+install --agent "" --copy unslop
+check "rejects an empty --agent, installing nowhere" '[ "$status" != 0 ] && [ ! -e "$skills/unslop" ] && [ ! -e "$HOME/.codex/skills" ]'
+rm -rf "$HOME/.codex"
+
+reset
 mkdir "$skills/unslop" && echo "theirs" >"$skills/unslop/SKILL.md"
 install unslop
 check "skips a skill it did not install" 'grep -q theirs "$skills/unslop/SKILL.md"'

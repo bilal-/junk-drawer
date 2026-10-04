@@ -82,7 +82,7 @@ list=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --agent) [ $# -ge 2 ] || fail "--agent needs a name"; agents="$agents$2$nl"; shift 2 ;;
+    --agent) [ $# -ge 2 ] && [ -n "$2" ] || fail "--agent needs a name"; agents="$agents$2$nl"; shift 2 ;;
     --dir)
       [ $# -ge 2 ] || fail "--dir needs a path"
       case "$2" in "") fail "--dir needs a path" ;; *"$nl"*) fail "--dir paths cannot contain a newline" ;; esac
