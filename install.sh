@@ -17,8 +17,26 @@ MARK=".junk-drawer"
 unset CDPATH
 BACKUPS="${JUNK_DRAWER_BACKUPS:-$HOME/.junk-drawer-backups}"
 
+# Every harness this script knows, and its skills folder. A harness counts as
+# installed when the folder holding its skills folder exists.
+HARNESSES="claude codex agents gemini antigravity qwen opencode copilot cursor"
+skills_folder() {
+  case "$1" in
+    claude) printf '%s' "$HOME/.claude/skills" ;;
+    codex) printf '%s' "${CODEX_HOME:-$HOME/.codex}/skills" ;;
+    agents) printf '%s' "$HOME/.agents/skills" ;;
+    gemini) printf '%s' "$HOME/.gemini/skills" ;;
+    antigravity) printf '%s' "$HOME/.gemini/antigravity-cli/skills" ;;
+    qwen) printf '%s' "$HOME/.qwen/skills" ;;
+    opencode) printf '%s' "$HOME/.config/opencode/skills" ;;
+    copilot) printf '%s' "$HOME/.copilot/skills" ;;
+    cursor) printf '%s' "$HOME/.cursor/skills" ;;
+    *) return 1 ;;
+  esac
+}
+
 usage() {
-  cat <<'EOF'
+  cat <<EOF
 Usage: install.sh [options] [skill ...]
 
 Installs the named skills (all of them if none are named) into the skills
@@ -26,7 +44,7 @@ folder of every agent harness found on this machine.
 
 Options:
   --agent NAME   Install for this harness only; repeat for more. One of:
-                 claude codex agents gemini antigravity qwen opencode copilot cursor
+                 $HARNESSES
   --dir PATH     Install into PATH instead (any harness not listed above).
   --link         Link to this checkout instead of copying (edits show at once).
   --copy         Copy, even from a checkout.
@@ -52,24 +70,6 @@ fail() { printf 'install.sh: %s\n' "$*" >&2; exit 1; }
 # Lists below hold one item per line, so paths may contain spaces.
 nl='
 '
-
-# Every harness this script knows, and its skills folder. A harness counts as
-# installed when the folder holding its skills folder exists.
-HARNESSES="claude codex agents gemini antigravity qwen opencode copilot cursor"
-skills_folder() {
-  case "$1" in
-    claude) printf '%s' "$HOME/.claude/skills" ;;
-    codex) printf '%s' "${CODEX_HOME:-$HOME/.codex}/skills" ;;
-    agents) printf '%s' "$HOME/.agents/skills" ;;
-    gemini) printf '%s' "$HOME/.gemini/skills" ;;
-    antigravity) printf '%s' "$HOME/.gemini/antigravity-cli/skills" ;;
-    qwen) printf '%s' "$HOME/.qwen/skills" ;;
-    opencode) printf '%s' "$HOME/.config/opencode/skills" ;;
-    copilot) printf '%s' "$HOME/.copilot/skills" ;;
-    cursor) printf '%s' "$HOME/.cursor/skills" ;;
-    *) return 1 ;;
-  esac
-}
 
 agents=""
 targets=""

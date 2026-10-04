@@ -31,6 +31,15 @@ check() {
 }
 reset() { rm -rf "$HOME"; mkdir -p "$skills"; }
 
+harnesses=$(sed -n 's/^HARNESSES="\(.*\)"$/\1/p' "$root/install.sh")
+[ -n "$harnesses" ] || { echo "FAIL: no HARNESSES line in install.sh"; failures=$((failures + 1)); }
+for a in $harnesses; do
+  install --agent "$a" --dry-run unslop
+  check "harness $a has a skills folder" '[ "$status" = 0 ]'
+  install --help
+  check "the help names harness $a" 'grep -qw "$a" "$work/out"'
+done
+
 reset
 install --link unslop
 check "links into a harness that is present" '[ -L "$skills/unslop" ] && [ -f "$skills/unslop/SKILL.md" ]'
