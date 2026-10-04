@@ -80,8 +80,9 @@ curl -fsSL https://raw.githubusercontent.com/bilal-/junk-drawer/main/skills/unsl
   -o ~/.claude/skills/unslop/SKILL.md
 ```
 
-For a project instead of your user, use the same folder names inside the
-project (for example `.claude/skills/`).
+For one project instead of your user, most harnesses read the same folder
+inside the project (`.claude/skills/`, `.agents/skills/`); OpenCode reads
+`.opencode/skills/`. Check your harness's docs.
 
 ### From a marketplace
 
@@ -97,7 +98,7 @@ Each skill is its own plugin, and `the-whole-drawer` installs them all.
 
 | How you installed | Update | Remove |
 | --- | --- | --- |
-| `npx skills` | `npx skills update` | `npx skills remove unslop` |
+| `npx skills` | `npx skills update` | `npx skills remove unslop -g` (drop `-g` for a project install) |
 | `curl` | run the same command again | add `--uninstall` |
 | From a checkout (`./install.sh --link`) | `git pull` | `./install.sh --uninstall` |
 | Claude Code | `/plugin marketplace update junk-drawer` | `/plugin uninstall unslop@junk-drawer` |

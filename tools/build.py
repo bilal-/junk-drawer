@@ -29,18 +29,36 @@ MAX_DESCRIPTION = 1024
 EVERYTHING = "the-whole-drawer"
 
 
+# Frontmatter here is a strict subset of YAML, so it reads the same in every
+# harness without a YAML library: each field on one line, its value plain or
+# wholly quoted. Block scalars (> |), flow collections, and anchors are out.
+SPECIAL = (">", "|", "[", "{", "&", "*", "!", "%", "@", "`")
+
+
 def frontmatter(path):
-    """The SKILL.md's frontmatter fields, as plain strings."""
+    """The SKILL.md's frontmatter fields as strings, and any lines that break the subset."""
     text = path.read_text()
     match = re.match(r"^---\n(.*?)\n---\n", text, re.S)
     if not match:
-        return None
-    fields = {}
+        return None, []
+    fields, bad = {}, []
     for line in match.group(1).splitlines():
         key, sep, value = line.partition(":")
-        if sep and not line.startswith((" ", "\t")):
-            fields[key.strip()] = value.strip().strip('"').strip("'")
-    return fields
+        value = value.strip()
+        if line.startswith((" ", "\t")) or not sep:
+            bad.append(f"continued or unkeyed line {line.strip()!r}")
+        elif value[:1] in ('"', "'"):
+            quote = value[0]
+            inner = value[1:-1]
+            if len(value) < 2 or value[-1] != quote or (quote == '"' and re.search(r'(?<!\\)"', inner)) or (quote == "'" and re.search(r"(?<!')'(?!')", inner)):
+                bad.append(f"{key.strip()}: a quoted value must be closed, once, at the end of its line")
+            fields[key.strip()] = inner.replace('\\"', '"') if quote == '"' else inner.replace("''", "'")
+        elif value.startswith(SPECIAL) or ": " in value or " #" in value:
+            bad.append(f"{key.strip()}: quote this value; plain YAML would read it differently")
+            fields[key.strip()] = value
+        else:
+            fields[key.strip()] = value
+    return fields, bad
 
 
 def problems():
@@ -55,10 +73,11 @@ def problems():
         if not skill_md.exists():
             found.append(f"drawer.json lists {name}, but skills/{name}/SKILL.md does not exist")
             continue
-        fields = frontmatter(skill_md)
+        fields, bad = frontmatter(skill_md)
         if fields is None:
             found.append(f"{skill_md.relative_to(ROOT)} has no frontmatter")
             continue
+        found += [f"{skill_md.relative_to(ROOT)} frontmatter: {problem}" for problem in bad]
         if fields.get("name") != name:
             found.append(f"{skill_md.relative_to(ROOT)}: name is {fields.get('name')!r}, its folder is {name!r}")
         if not NAME.match(name) or len(name) > MAX_NAME:
