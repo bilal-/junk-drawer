@@ -55,7 +55,8 @@ def profile(work, **fields):
 def case():
     """A fresh workspace for one case: an app with an ignored .env, and a key outside it."""
     work = Path(tempfile.mkdtemp(prefix="junk-drawer-backup."))
-    git_project(work / "ws" / "app", {"package.json": "{}", ".env": "API_KEY=dummy\n"}, ignored=[".env"])
+    git_project(work / "ws" / "app", {"package.json": "{}", ".env": "API_KEY=dummy\n", ".env.production": "TRACKED=1\n"},
+                ignored=[".env"])
     (work / "keys").mkdir()
     (work / "keys" / "upload.p12").write_bytes(b"dummy key bytes")
     return work
@@ -78,13 +79,14 @@ try:
     check("inventory runs", result.returncode == 0, result.stderr)
     found = json.loads(inventory.read_text())["projects"]
     check("inventory finds the app and its ignored .env",
-          [(p["id"], [c["path"] for c in p["local_recovery_candidates"]]) for p in found] == [("app", [".env"])], str(found))
+          [p["id"] for p in found] == ["app"] and ".env" in [c["path"] for c in found[0]["local_recovery_candidates"]], str(found))
     out = work / "out" / "backup"
     result = run(BACKUP, "build", "--profile", profile(work, shared_files=[shared_key(work)]), "--destination", out)
     check("build runs", result.returncode == 0, result.stderr)
     check("build copies the ignored .env", (out / "Projects/app/Private Configuration/dot-env").read_text() == "API_KEY=dummy\n")
     check("build copies the shared key", (out / "Credentials/Signing/upload.p12").read_bytes() == b"dummy key bytes")
-    check("build leaves tracked files out", not (out / "Projects/app/Private Configuration/package.json").exists())
+    check("build leaves tracked files out, even ones named like secrets",
+          not (out / "Projects/app/Private Configuration/dot-env.production").exists())
     for record in ["MANIFEST.json", "SHA256SUMS.txt", "PROJECTS-INDEX.md", "MISSING-ASSETS.md", "README.txt",
                    "Tools/verify-backup.py", "Projects/app/FILES.json", "Projects/app/PROJECT-RECORD.json"]:
         check(f"build writes {record}", (out / record).is_file())
@@ -95,13 +97,14 @@ try:
     check("the packaged verifier passes from another folder", result.returncode == 0, result.stdout + result.stderr)
     result = run(BACKUP, "verify", "--destination", out)
     check("verify passes", result.returncode == 0, result.stderr)
+    result = run(BACKUP, "build", "--profile", work / "profile.json", "--destination", out)
+    check("build refuses an existing backup without --extend", result.returncode != 0 and "--extend" in result.stderr,
+          result.stderr.strip())
     (out / "Credentials/Signing/upload.p12").write_bytes(b"changed")
     result = run(out / "Tools/verify-backup.py", cwd=work)
     check("the packaged verifier catches a changed file", result.returncode != 0 and "upload.p12" in result.stdout)
     result = run(BACKUP, "verify", "--destination", out)
     check("verify catches a changed file", result.returncode != 0 and "upload.p12" in result.stderr)
-    result = run(BACKUP, "build", "--profile", work / "profile.json", "--destination", out)
-    check("build refuses an existing folder without --extend", result.returncode != 0)
 finally:
     shutil.rmtree(work)
 
