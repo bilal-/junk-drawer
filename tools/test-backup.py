@@ -105,6 +105,18 @@ try:
 finally:
     shutil.rmtree(work)
 
+# A verified backup can be extended with another project.
+work = case()
+try:
+    out = work / "out" / "backup"
+    run(BACKUP, "build", "--profile", profile(work), "--destination", out)
+    git_project(work / "ws" / "second", {"package.json": "{}", ".env": "B=1\n"}, ignored=[".env"])
+    result = run(BACKUP, "build", "--profile", profile(work, projects={"app": {"exclude": True}}), "--destination", out, "--extend")
+    check("--extend adds a project to a verified backup", result.returncode == 0, result.stderr.strip())
+    check("--extend leaves a backup that verifies", run(BACKUP, "verify", "--destination", out).returncode == 0)
+finally:
+    shutil.rmtree(work)
+
 for failure in failures:
     print(f"FAIL: {failure}")
 if failures:

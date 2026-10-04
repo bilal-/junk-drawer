@@ -390,6 +390,8 @@ class Package:
                    'verification do not establish store delivery or a full production restore.\n', replace=(self.root / 'MISSING-ASSETS.md').exists())
         self.write_json('Tools/backup-profile.json', profile, replace=(self.root / 'Tools/backup-profile.json').exists())
         verifier = Path(__file__).with_name('verify_backup.py')
+        # An extended backup already has a verifier; replace it with this one.
+        if (self.root / 'Tools/verify-backup.py').is_file(): (self.root / 'Tools/verify-backup.py').unlink()
         self.copy(verifier, 'Tools/verify-backup.py', 'Standalone read-only checksum verifier', 'Run python3 Tools/verify-backup.py from any working directory.')
         tools_readme = self.root / 'Tools/README.txt'
         self.write('Tools/README.txt', (tools_readme.read_text() if tools_readme.exists() else '') +
