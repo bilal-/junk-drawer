@@ -133,7 +133,9 @@ def published():
     None with no remote."""
     remotes = git("remote").stdout.split()
     remotes.sort(key=lambda remote: remote != "origin")
-    for ref in ["@{upstream}", *(f"{remote}/HEAD" for remote in remotes)]:
+    # A clone may not record a remote's default branch, so try the usual names.
+    defaults = [f"{remote}/{branch}" for remote in remotes for branch in ("HEAD", "main", "master")]
+    for ref in ["@{upstream}", *defaults]:
         if git("rev-parse", "--verify", "-q", ref).returncode == 0:
             base = git("merge-base", "HEAD", ref).stdout.strip()
             if base:
