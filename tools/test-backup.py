@@ -170,11 +170,16 @@ work = case()
 try:
     git_project(work / "ws" / "client" / "portal", {"package.json": "{}"})
     (work / "ws" / "client" / "upload.p12").write_bytes(b"key")
+    (work / "ws" / "app" / "backups").mkdir()
+    (work / "ws" / "app" / "backups" / "snapshot.sqlite3").write_bytes(b"db")
     inventory = work / "inventory.json"
     run(BACKUP, "inventory", "--root", work / "ws", "--output", inventory)
     data = json.loads(inventory.read_text())
     check("inventory lists a file beside a nested project", str(work / "ws" / "client" / "upload.p12") in data["unassigned_paths"],
           str(data["unassigned_paths"]))
+    app = next(p for p in data["projects"] if p["id"] == "app")
+    check("inventory lists a .sqlite3 export, as build would take it",
+          "backups/snapshot.sqlite3" in [c["path"] for c in app["local_recovery_candidates"]])
 finally:
     shutil.rmtree(work)
 

@@ -58,6 +58,9 @@ MARKERS = {
     'Dockerfile',
     'DockerFile',
 }
+# Data exports kept in a project's backups/ folder: what inventory lists and
+# include_historical_exports takes.
+EXPORT_SUFFIXES = {'.sql', '.sqlite', '.sqlite3', '.db', '.zip', '.tar', '.gz'}
 PRIVATE_SUFFIXES = {'.p8', '.p12', '.jks', '.keystore', '.mobileprovision', '.pem', '.key'}
 GENERATED = {'MANIFEST.json', 'SHA256SUMS.txt'}
 
@@ -190,7 +193,7 @@ def discover(roots):
             for q in walk_files(p['path'])
             if private_candidate(q)
             or (
-                'backups' in q.parts and q.suffix.lower() in {'.sql', '.sqlite', '.db', '.zip', '.tar', '.gz'}
+                'backups' in q.parts and q.suffix.lower() in EXPORT_SUFFIXES
             )
         ]
     return {
@@ -452,7 +455,7 @@ class Package:
             candidates = [
                 q
                 for q in walk_files(exports)
-                if q.suffix.lower() in {'.sql', '.sqlite', '.sqlite3', '.db', '.zip', '.tar', '.gz'}
+                if q.suffix.lower() in EXPORT_SUFFIXES
             ]
             if candidates:
                 self.readme(
