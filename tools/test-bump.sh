@@ -7,17 +7,27 @@ root=$(pwd)
 work=$(mktemp -d /tmp/junk-drawer-bump.XXXXXX)
 trap 'rm -rf "$work"' EXIT INT TERM
 failures=0
+# Run from the pre-commit hook, git points these at the commit in progress;
+# the throwaway repositories must not touch it.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_COMMON_DIR \
+  GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_PREFIX GIT_NAMESPACE
 export GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@example.com
 export GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@example.com
 
 g() { git -c core.hooksPath=/dev/null -c init.defaultBranch=main "$@"; }
 
-# A published repository holding the working tree's drawer, and a clone of it in $work/clone.
+# A published repository holding the working tree's drawer, every skill at
+# 1.0.0 whatever the real versions are, and a clone of it in $work/clone.
 fresh() {
   rm -rf "$work/pub.git" "$work/clone"
   g init -q "$work/seed"
   cp -R "$root/skills" "$root/drawer.json" "$root/README.md" "$work/seed/"
   mkdir -p "$work/seed/tools" && cp "$root/tools/build.py" "$work/seed/tools/"
+  (cd "$work/seed" && python3 -c "
+import json, pathlib
+p = pathlib.Path('drawer.json'); d = json.loads(p.read_text())
+for s in d['skills']: s['version'] = '1.0.0'
+p.write_text(json.dumps(d, indent=2, ensure_ascii=False) + '\n')")
   g -C "$work/seed" add -A && g -C "$work/seed" commit -qm seed
   g clone -q --bare "$work/seed" "$work/pub.git" && rm -rf "$work/seed"
   g clone -q "$work/pub.git" "$work/clone"
