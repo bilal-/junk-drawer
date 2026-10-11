@@ -334,3 +334,71 @@ This judges `skills/night-shift/SKILL.md` as it stood before commit `8687fd1`, w
 - Giving the reviewer enough context (rules files, surrounding code), since
   missing context is a main source of false positives.
 - Severity definitions so "clean" has a meaning.
+
+## 7. Autonomous refactoring revision (1.1.0, 2026-10-11)
+
+The first revision improved validation without sufficiently improving discovery.
+The old loop reviewed the original scope once, then only its own recent commits;
+a clean diff could end the run before the original codebase had been assessed.
+The closing whole-repository pass was optional and could also exceed a requested
+path scope. These are workflow defects, not evidence that more refactoring is
+always better.
+
+The revised loop keeps an original-scope coverage map and a ranked findings
+backlog. Discovery examines connected modules, complete flows, callers, and tests;
+regression review examines the changes and affected relationships. A clean diff
+does not close pending source coverage. Deferred findings and budget-limited
+coverage are reported as partial completion. Correction reviews count toward the
+same round budget so the inner loop cannot run indefinitely.
+
+The structural lenses in `references/refactoring.md` turn the existing sources
+in section 1 into evidence requirements: repeated knowledge, change amplification,
+scattered decisions, shallow layers, inappropriate coupling, and mixed ownership.
+Architectural improvements are allowed when they can preserve contracts in small
+steps. Every proposal identifies a concrete payoff, invariants, proof, and green
+steps; the reviewer checks whether the actual result reduced complexity across
+callers. Source support includes Fowler's refactoring workflows and Google's
+guidance to assess overall design, complexity, useful tests, and system context:
+https://martinfowler.com/articles/workflowsOfRefactoring/ and
+https://google.github.io/eng-practices/review/reviewer/looking-for.html . These are
+practitioner guidance, not a measured guarantee of autonomous refactoring quality.
+
+Conditional stack checks also come from a read-only inventory of first-party
+manifests, source entry points, and build/deploy configuration in the owner's
+workspace. Besides browser, mobile, and Workers apps, it established native
+mobile libraries, macOS helpers, Node services, Next.js, Apps Script, PHP, Go,
+shell tools, and Python/JavaScript data pipelines. Detection separates framework,
+execution host, and stateful services, and excludes installed dependencies,
+generated code, duplicate worktrees, and archived tooling as stack evidence.
+
+Platform-specific preservation checks are grounded in primary documentation:
+
+- React identity and state: https://react.dev/learn/preserving-and-resetting-state .
+- React Native testing limits and native code generation:
+  https://reactnative.dev/docs/testing-overview and
+  https://reactnative.dev/docs/the-new-architecture/using-codegen .
+- SwiftUI identity/lifetime: https://developer.apple.com/videos/play/wwdc2021/10022/ .
+- Android state ownership and runtime reachability:
+  https://developer.android.com/develop/ui/compose/state-hoisting and
+  https://developer.android.com/topic/performance/app-optimization/keep-rules-overview .
+- Next.js server/client boundaries:
+  https://nextjs.org/docs/app/getting-started/server-and-client-components .
+- Astro hydration/rendering and Workers execution constraints:
+  https://docs.astro.build/en/reference/directives-reference/ ,
+  https://docs.astro.build/en/guides/on-demand-rendering/ , and
+  https://developers.cloudflare.com/workers/best-practices/workers-best-practices/ .
+- Apps Script runtime, execution identity, and locks:
+  https://developers.google.com/apps-script/guides/v8-runtime ,
+  https://developers.google.com/apps-script/guides/web , and
+  https://developers.google.com/apps-script/reference/lock/lock-service .
+- PHP response ordering, Go race checks, Node streams, and Python subprocesses:
+  https://www.php.net/manual/en/function.header.php ,
+  https://go.dev/doc/articles/race_detector ,
+  https://nodejs.org/api/stream.html , and
+  https://docs.python.org/3/library/subprocess.html .
+
+A local Node experiment also confirmed that replacing an async forwarding
+function with a direct call changes a dependency's synchronous throw from a
+rejected promise into an immediate exception. A shorter wrapper is therefore
+not inherently behaviour-equivalent. This observed counterexample supports the
+common contract checklist rather than a blanket ban on inlining wrappers.

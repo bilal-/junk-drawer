@@ -1,241 +1,336 @@
 ---
 name: "night-shift"
-description: "Review, fix, and refactor a codebase in rounds, unattended, until a round comes back clean or the budget runs out. A second model reviews; every finding is verified before it is acted on; every bug fix gets a test that fails without it; refactors keep behaviour and go in their own commits; a findings ledger stops rounds re-raising rejected findings or undoing each other. Use when asked to review and fix until clean, run a review loop, harden or refactor a codebase, or work through review findings overnight."
+description: "Autonomously review, fix, and refactor a whole codebase or focused area overnight. Maps architecture, finds duplicated knowledge, poor boundaries, tangled responsibilities, and other concrete maintenance problems, then works through a ranked backlog in small tested commits. Refactors preserve behaviour; bug fixes need regression tests; a second model reviews. Tracks scope coverage and findings to prevent premature completion and repeated rejected changes. Adapts to the project's languages, frameworks, and runtimes. Use for unattended refactoring, codebase cleanup, architecture improvement, or review-and-fix rounds until clean or the budget runs out."
 ---
 
 # Night shift
 
-Run review and fix rounds on a codebase until a round comes back clean. Built
-to run unattended: start it, go to sleep, wake up to a branch where every
-change is tested and committed, every rejected finding has a reason, and the
-reviewer has nothing left worth fixing.
+Work through the requested codebase autonomously, finding and removing concrete
+obstacles to understanding and changing it. Leave a tested, committed branch,
+with evidence for the improvements and an honest account of what remains.
+
+Discovery and regression review are separate jobs. A clean review of your last
+commits does not mean the untouched codebase has been assessed. Continue through
+the original scope until no worthwhile work remains or a stop rule applies.
 
 ## Inputs
 
-Ask only for what you cannot work out. Default everything else.
+Ask only for information that blocks the work. Infer the rest and record the
+choice. Routine refactoring decisions are yours to make within the user's scope.
 
-- **Scope:** where the first round starts. A commit (`main`, a SHA, `HEAD~10`),
-  a path, or the whole repository. Default: the whole repository.
-- **Focus:** `bugs`, `refactor`, or `both` (see What is worth changing).
-  Default: `both`.
-- **Bar:** `high` and `medium` findings (below), or `all` to fix confirmed
-  minor ones too, such as a misleading name or a small duplication. Default:
-  `high` and `medium`, which converges faster overnight.
-- **Budget:** a cap on rounds, and on time or spend if the person gives one.
-  Default: 8 rounds. Stop rules below can end the run sooner.
-- **Push:** whether you may push. Default: no. Commit locally; the person pushes.
-- **Reviewer:** which tool reviews. Default: the first available that is a
-  different model from the one you are (see Reviewer).
+- **Scope:** whole repository by default; otherwise the requested paths, feature,
+  package, or commit range. Resolve commit references to fixed SHAs. For a commit
+  scope, inspect changed code and its affected relationships. Read callers and
+  dependencies as needed; that does not expand permission to edit them.
+- **Focus:** `bugs`, `refactor`, or `both`. Default: `both`. Structural discovery
+  is required for `refactor` and `both`; do not let bug hunting replace it.
+- **Bar:** confirmed high and medium findings by default; `all` includes low
+  findings. High means a reachable correctness, data, or security risk. Medium
+  includes demonstrated maintenance difficulty. Low means a small, confirmed
+  improvement. Taste is not a finding at any bar.
+- **Budget:** the user's round, time, or spend cap; default 8 rounds. A round is
+  one discovery-and-change batch followed by one review. Reviewing corrections
+  consumes another round; no unbounded inner review loop. Preparation, tests, and
+  reviewers consume the same time/spend budget. Reserve enough to validate and
+  leave a clean tree; do not start work you cannot safely finish.
+- **Push:** no by default. Commit locally; push only when authorized.
+- **Reviewer:** an available different model; see Reviewer below.
 
-## Before the first round
+## Prepare
 
-1. **Learn the project's own commands.** Read the README, `AGENTS.md`,
-   `CLAUDE.md`, `CONTRIBUTING`, and whatever builds the project. Find how it
-   formats, lints, tests, and verifies before a merge. Use its scripts over raw
-   tool calls. Write down the exact commands.
-2. **Learn its rules.** Conventions, invariants, decision records, rules about
-   commits or tests. These win over this skill and over any reviewer.
-3. **Check the ground.** The working tree is clean and the full test suite
-   passes before you change anything. If not, stop and say so: you cannot tell
-   your breakage from what was already broken. Note any test that fails only
-   sometimes.
-4. **Branch.** Never work on the default branch.
+1. **Learn the project.** Read applicable `AGENTS.md`, `CLAUDE.md`, README,
+   `CONTRIBUTING`, build configuration, and relevant design documents. Project
+   rules and contracts beat generic advice or a reviewer's preferences. Learn
+   the project's exact format, lint, build, type-check, and test commands; prefer
+   its scripts. Do not install tooling just to run this skill.
+2. **Identify targets.** Map first-party packages, entry points, framework
+   versions, deployment hosts, native targets, and data/services. Use
+   [stack detection](references/stack-detection.md), its common checks, and only
+   the linked sections relevant to the scope. Use available specialist guidance
+   when helpful; another skill is not required.
+3. **Establish a green baseline.** Start with a clean working tree and run the
+   required project gate, including its full required test suite. Stop before
+   editing if it fails or cannot run. Record commands, test count, platforms,
+   build configurations, and results. Separate optional checks from required
+   ones. Missing optional device or integration checks need not stop unrelated
+   work, but defer changes whose safety depends on them.
+4. **Use a working branch.** Never change the default branch directly.
 5. **Start the log and ledger** in `$(git rev-parse --git-dir)/night-shift/`,
-   which git never tracks: `log.md` (one entry per round) and `ledger.md` (one
-   line per finding). Record the starting commit and the test count.
+   outside tracked files. `log.md` records the starting SHA, budget, scope map,
+   validation matrix, rounds, and checkpoints. `ledger.md` is the ranked backlog
+   and history of findings. Keep both concise enough to resume from.
+6. **Map the original scope into meaningful review units:** packages, features,
+   subsystems, or connected modules, not arbitrary file-count chunks. Record
+   each unit's responsibility, entry points, dependencies, state/resource
+   owners, checks, and coverage status: `pending`, `inspected`, or `revisit`.
+   Exclude generated and third-party code unless specifically in scope; inspect
+   its contracts when relevant. Reading a directory listing or README is not
+   source review. In a large repository, work through units across rounds.
 
-## What is worth changing
+## Find worthwhile refactors
 
-Reviewer and fixer both use this list. A finding must name which item it is.
+For `refactor` or `both`, read the [refactoring guide](references/refactoring.md).
+Examine architecture as well as individual functions. Trace representative
+flows from entry point through domain logic, storage or external services, and
+back; include error, cancellation, and cleanup paths. Inspect the code, its
+callers, tests, and relevant history. Look across package and platform boundaries
+for the same rule implemented separately.
 
-**Worth changing:**
-- **Defects** a user or caller can hit: wrong results, crashes, data loss,
-  races, leaks, swallowed errors, security holes, broken edge cases (empty,
-  missing, boundary, encoding, time, concurrency), release-only configuration.
-- **Drift between twins:** the same behaviour in two places (platforms, client
-  and server, a fake and the real thing) that no longer agrees.
-- **Duplicated knowledge:** one rule written in three or more places, or in
-  two that must change together or already disagree.
-- **Dead code:** unreachable or unused, confirmed by searching every caller,
-  including reflection, configuration, templates, and other packages.
-- **Comments, names, and docs that are false** or mislead.
-- **Shallow layers:** wrappers and pass-throughs that add interface without
-  hiding anything; one decision spread across several modules.
-- **Tests that cannot fail:** no assertion, asserting on a mock's own answer,
-  a bug fix with no test.
+Prioritize problems that amplify changes or force callers to understand too
+many details:
 
-**Not worth changing:**
-- Anything the formatter or linter owns, and taste: "consider", "could",
-  "cleaner", "more idiomatic".
-- Two similar pieces that change for different reasons. A wrong abstraction
-  costs more than the duplication; wait for the third copy.
-- New layers, interfaces, options, or generality for a need nobody has.
-- Splitting code only because it is long, when it reads as one idea.
-- Anything observable from outside the module: public API, CLI flags and
-  output, file and wire formats, error messages, ordering, defaults. Someone
-  depends on it. Changing it is a behaviour change, only with the person's
-  say-so.
-- Rewrites, or anything that cannot be done in small behaviour-keeping steps.
-- Speculative bugs: "might", "could", with no path from an input to a failure.
-- Undoing a change made earlier in this run, or re-raising a finding the
-  ledger rejected, without new evidence.
+- Duplicated knowledge and drift between implementations of the same contract.
+- One decision or invariant scattered across modules; repeated caller-side
+  coordination; leaking implementation details.
+- Mixed responsibilities, misplaced ownership, dependency cycles, and coupling
+  that violates an established boundary or spreads one concern across unrelated
+  modules.
+- Shallow wrappers, speculative abstraction, flag-heavy generalization, and
+  excessive indirection that add more complexity than they hide.
+- Tangled control flow, repeated state synchronization, and inconsistent
+  representations that make a concrete operation hard to reason about.
+- Confirmed dead code, misleading names or documentation, and tests that cannot
+  detect the failures they claim to cover.
 
-## A round
+A smell is a search lead, not a verdict. Give concrete locations and explain
+what is difficult today: which callers repeat a sequence, which copies must
+change together, which dependency exposes an implementation detail. Complexity
+scores, file length, similarity, and fashionable architecture labels alone do
+not justify an edit.
 
-1. **Review.** Give the reviewer:
-   - the scope: in round one the starting scope; after that only the last
-     round's commits (`git log -p <from>..<to>`), with read access to the
-     repository so it can see the surrounding code;
-   - the focus, the list above, and the project's rules files;
-   - the ledger's rejected and contested entries, marked "do not re-raise
-     without new evidence".
+Architectural refactoring is in scope: move a responsibility to its owner,
+consolidate a rule, simplify a module's interface, separate unrelated concerns,
+or remove an unnecessary dependency. Implement it in behaviour-preserving
+steps using the project's conventions. Do not turn this into a framework,
+state-library, or architectural-style migration. Internal interfaces may change
+when their affected consumers migrate safely; identify the actual external
+consumer boundary rather than treating every helper signature as immutable.
 
-   Ask for findings only at **high** (a user or caller can hit it, or data or
-   security is at risk) or **medium** (it makes correct change harder, from
-   the list above), plus **low** (confirmed, small, from the list) when the bar
-   is `all`. For each: severity, list item, `file:line`, evidence (for a
-   defect, the input or path that triggers it; for duplication, every copy),
-   and the fix. Exactly `NO FINDINGS` when there are none.
-2. **Triage against the ledger.** Drop repeats of rejected findings. If a
-   finding would undo a fix from this run, do not flip back: decide it once on
-   the evidence, and if it comes back again mark both sides `contested` and
-   leave them for the person.
-3. **Verify each finding.** Reviewers are often wrong, and agreement between
-   models is not evidence. Do not defer to a confident tone.
-   - **Defect:** reproduce it with a test. If you cannot make a test fail, the
-     finding is unconfirmed: reject it and say why.
-   - **Structure:** check it against the list; confirm usages by searching.
-   - A documented project rule beats the reviewer.
+Avoid cosmetic churn, abstractions for hypothetical consumers, and merging
+similar-looking code that changes for different reasons. Preserve useful
+adapters, compatibility paths, and test seams. Public APIs, wire/file formats,
+error behaviour, ordering, defaults, and UI state lifetime are contracts; changing
+them requires a confirmed defect within bug-fix scope or separate authorization.
 
-   Write each verdict to the ledger: id, round, `file:line`, one-line summary,
-   then `fixed <sha>`, `rejected: <reason>`, `contested`, or `deferred: <reason>`.
-4. **Fix, keeping behaviour and structure apart.**
-   - **Behaviour change** (bug fix): the failing test first, then the smallest
-     fix. **Check the test fails on the old code** (revert the fix, run it,
-     restore): a test that passes either way proves nothing. The test asserts
-     what a caller sees, not how the code does it.
-   - **Structure change** (refactor): no behaviour change. The existing tests
-     stay as they are (except call sites of something renamed) and pass before
-     and after. Where the code is not covered, first add tests that pin what it
-     does today, in their own commit. Take small steps and run the tests
-     between them.
-   - Never mix the two in one commit. If a fix needs a tidying first, commit
-     the tidying, then the fix.
-   - **Fix twins together.**
-   - **Stay in scope.** No drive-by edits. Something else you notice goes in
-     the ledger as `noticed`, or becomes its own finding if it is a defect.
-   - **Prefer replacing and deleting to adding.** If one finding's change grows
-     past a few hundred lines or a dozen files, stop, discard it, and record it
-     as `deferred: too large for an unattended change`.
-5. **Check the diff for gamed tests** before every commit. Look for deleted,
-   skipped, or disabled tests; loosened assertions or tolerances; changed
-   expected values; raised timeouts; production code that special-cases a
-   test; new lint suppressions, coverage exclusions, or `|| true`. Each must be
-   justified in the commit message (for example, tests of code you deleted), or
-   undone. The test count must not fall below the baseline without that.
-6. **Gate and commit as one chain** that stops at the first failure: format,
-   lint, test, commit, then the project's merge gate if it has one, then push
-   if allowed. In shell: `lint && test && git commit … && gate && git push`.
-   Never `;` between them: a failed lint must not commit. The gate comes after
-   the commit only because many gates need a clean tree; if it fails, undo
-   that commit with `git reset --soft HEAD~1` (it is yours and not pushed) and
-   treat it as a failed gate (When things break). Keep the working tree
-   still while the gate runs. Run the full suite, not just the new test.
-7. **Write the commit message for a human:** what changed and why, in plain
-   words, and whether it changes behaviour. One commit per finding, or per
-   group of the same structural change.
-8. **Log the round:** findings raised, fixed, rejected; commits; time.
+## Each round
+
+### 1. Discover and rank
+
+Inspect the next connected part of the original scope, prioritizing central
+flows, known duplication, and risky boundaries. Carry forward unresolved review
+findings. Even if the previous diff was clean, keep discovering while units
+remain pending. Revisit units when changes affect their contracts or ownership.
+For a bugs-only run, use the same coverage discipline to seek reachable defects.
+
+Add evidence-backed candidates to the ledger. Rank by user/caller risk, reduction
+in change amplification or reasoning burden, confidence, and verification cost.
+Prefer a substantive, provable improvement over a collection of easy renames.
+Do not manufacture work to fill the budget.
+
+For each finding, record an id, severity, locations and consumers, evidence,
+expected payoff, and status. Use `candidate`, `verified`, `in-progress`,
+`fixed <sha(s)>`, `rejected: <reason>`, `contested: <reason>`, or
+`deferred: <reason>`. Notice unrelated issues without editing outside scope.
+Rejected and contested entries accompany future reviews; reopen only with new
+evidence. If a proposal would undo an earlier change, resolve the disagreement
+on evidence once; do not alternate between designs.
+
+### 2. Verify and plan the selected work
+
+Check the finding yourself; a confident reviewer is not proof.
+
+- **Defect:** identify the input and execution path, then reproduce it with a
+  failing regression test. Without a reproducer, reject or defer it as unproven.
+- **Structure:** confirm the relevant usages, copies, ownership, and boundaries.
+  Before deleting or renaming, check configuration, reflection, registration,
+  templates, generated consumers, external interfaces, and platform counterparts.
+
+For a structural finding, record a short plan:
+
+- **Payoff:** the repeated rule, caller coordination, mixed responsibility, or
+  indirection being removed, and the intended owner/interface afterwards.
+- **Invariants:** inputs, outputs, errors, side effects and order, state identity,
+  lifetimes, cancellation, resource ownership, and compatibility that must stay.
+- **Proof:** existing tests and any missing characterization or integration
+  coverage needed to establish those invariants; relevant target checks.
+- **Steps:** independently useful changes that each leave the project green,
+  with a rollback point. For a wide change, introduce a compatible seam, migrate
+  callers in bounded groups, then remove the old path once usage is checked.
+
+For a consequential ownership or interface change, compare the proposal with
+a simpler local extraction, consolidation, or deletion. Choose the least complex
+design that removes the demonstrated problem, rather than a new abstraction by
+default. This is an implementation decision, not a reason to pause for approval.
+
+Choose a coherent improvement or a small set of independent findings that fits
+within the remaining budget. If preservation cannot be established with available
+checks, defer that finding and continue safe work elsewhere.
+
+### 3. Implement in small green steps
+
+- **Refactor:** where coverage is insufficient, first add tests that pin today's
+  behaviour, run them against unchanged production code, and commit them
+  separately. Test meaningful contracts and edge cases; do not mirror private
+  implementation. Preserve existing behavioural assertions. Then restructure,
+  running focused checks between steps. Do not require new tests for a proven
+  mechanical rename already covered by suitable checks.
+- **Bug fix:** failing test first, then the smallest fix. Confirm that the test
+  fails without the fix and passes with it. Assert what the caller observes,
+  rather than a mock's own answer. Commit the test and fix together.
+- Keep structural and behavioural changes in separate commits. If a bug needs
+  tidying first, commit the tested tidy, then the fix. In a refactor-only run,
+  record pre-existing defects; always repair or revert regressions you introduce.
+- Fix all in-scope copies of an affected shared contract. Preserve intentional
+  platform/domain differences. If a necessary consumer is outside edit scope,
+  retain compatibility or defer; do not silently widen scope.
+- Prefer removing complexity and reusing suitable existing concepts over adding
+  layers. Make extractions cohesive, with explicit dependencies and ownership.
+  Do not move a large tangle behind a new name and call it improved architecture.
+- Keep each step reviewable. Split a broad change into independently green
+  commits; defer a rewrite that cannot be split safely. For mechanical fan-out,
+  use an available symbol-aware rename or codemod, preview its changes, inspect
+  all affected consumers, and run their checks. Tooling does not prove equivalence.
+- Performance changes need a repeatable baseline and comparison on the same
+  workload and build. Do not add caching, memoization, or concurrency on intuition.
+
+### 4. Check integrity, gate, and commit
+
+Before every commit, inspect the diff for deleted/skipped tests, loosened
+assertions or tolerances, changed expected values, raised timeouts, test-specific
+production paths, lint suppressions, coverage exclusions, and `|| true`. Undo
+anything added merely to make checks pass. Legitimate removals or mechanical
+updates need a reason; test count must not silently fall below baseline.
+
+Run the required gate and full required suite, plus the affected target checks
+from the validation matrix. Focused tests do not replace these. Keep the tree
+still while checks run. Commit only on success; stop the command chain at the
+first failure. If a project gate requires a clean tree, use a provisional local
+commit and undo that commit with `git reset --soft HEAD~1` if it fails; only do
+this for your own unpublished commit, then apply the recovery rules.
+
+Commit per finding or independently useful step. Explain what changed, why the
+structure is better, and whether behaviour changes. Keep commits local through
+review; any authorized push belongs after final review and required checks.
+
+### 5. Review independently
+
+Give the reviewer the round's commits or diff, read access to surrounding code,
+the selected discovery units, project rules/contracts, focus/bar, relevant stack
+checks and versions, validation results/gaps, and rejected/contested ledger entries.
+Keep reviews bounded by connected units; do not repeatedly rescan the entire
+repository just to review a small fix.
+
+Ask for two assessments:
+
+- **Preservation:** regressions, missed consumers, contract/lifecycle changes,
+  weakened tests, and unsupported equivalence claims. Inspect all changed code
+  and affected callers; green tests alone do not establish preservation.
+- **Design and discovery:** does the change remove the stated difficulty across
+  callers, or relocate it, add configuration/indirection, or join unrelated
+  concepts? What worthwhile findings remain in the assigned original-scope
+  units, including untouched code and cross-unit boundaries?
+
+Each finding needs severity, `file:line`, concrete evidence, and a suggested fix;
+structural ones need payoff and preservation requirements. Request actual source
+coverage and gaps separately. In each assessment, use `NO FINDINGS` only when
+nothing qualifies within that coverage. A failed or blocked review is not clean.
+
+Verify new findings by the same rules. Make corrections the next round's priority
+before extending the refactor; corrections also need review, and consume the same
+round budget. If you cannot resolve a safety objection within budget, revert the
+affected change and check the recovered state. Put additional pre-existing
+opportunities into the backlog. Record the reviewed SHA, coverage, commits,
+checks, and verdicts in the log. An earlier clean verdict does not cover later
+corrections.
+
+### 6. Check the stopping conditions
+
+Continue with the highest-value safe backlog item or next pending unit. A clean
+diff is permission to continue discovery, not a reason to end it.
 
 ## Stop rules
 
-End the rounds at the first of:
+- **Clean:** all original-scope units and relevant boundaries have been inspected
+  for the requested focus, no qualifying candidates or unresolved findings remain,
+  and the final changes have passed review and required checks. Check the scope
+  map and ledger together before claiming this. Do not expand a path/commit-scoped
+  run into a whole-repository cleanup at the end.
+- **Budget:** the round, time, or spend cap is reached. Finish or roll back the
+  current step within the reserved cleanup budget. Report pending coverage and
+  work honestly; budget exhaustion does not mean clean.
+- **No safe remaining work:** remaining findings are deferred or contested and
+  no other unit can be usefully inspected within the available constraints.
+  Report partial completion and the reasons, rather than asking routine design
+  questions or claiming the codebase is clean.
+- **No progress:** three rounds produce only rework, oscillation, or failed
+  attempts without a retained improvement or new scope coverage. New findings
+  uncovered by fresh discovery are not themselves evidence of non-progress.
+- **Broken ground:** a required gate or environment failure cannot be recovered.
 
-- **Clean:** for the last round's commits, the reviewer says `NO FINDINGS`, or
-  everything it raised was rejected or was a ledger repeat.
-- **Budget:** the round, time, or spend cap.
-- **No progress:** three rounds where findings do not fall, because each
-  round's fixes create the next round's findings.
-- **Oscillation:** a finding comes back contested a second time.
-- **Broken ground** you cannot recover from (below).
+A contested finding is deferred so independent work can continue. If repeated
+fixes destabilize the project, stop under no progress instead of pushing through.
 
-Then finish. Say which rule ended the run.
+## Recovery
 
-## When things break
+- **A gate fails on a change:** fix the cause, at most two attempts. Otherwise
+  discard only that finding's edits or revert its commits to the last validated
+  checkpoint, mark it deferred, and continue safe work elsewhere.
+- **A committed change is wrong:** make a revert commit. Never rewrite history
+  someone else may have. Re-run checks on the recovered state.
+- **A test is flaky:** rerun once and compare with the starting commit without
+  overwriting ongoing work. Record pre-existing flakes; do not skip or loosen
+  them. An unexplained failure is not a passing gate.
+- **A reviewer hangs or errors:** time-limit calls, retry once, then use the next
+  available reviewer within budget. Failed calls do not establish coverage.
+- **The session ends:** resume from log, ledger, `git status`, and commits since
+  the recorded start. Re-run the gate on HEAD, reconcile coverage/backlog, then
+  continue without repeating rejected work.
+- **Never leave unfinished edits or known regressions behind.** Before stopping,
+  discard your failed work or revert unsafe commits, run the required gate, and
+  leave a clean working tree. Preserve any work that predates the run. If baseline
+  failed before editing, stop without changing it.
 
-- **The gate fails on your change:** fix the cause, two attempts at most.
-  Otherwise discard the uncommitted change back to the last green commit,
-  record the finding as `deferred: <what failed>`, and move on.
-- **A committed change turns out wrong:** `git revert` it as a new commit.
-  Never rewrite history the person may have.
-- **A test fails sometimes:** rerun it once. If it also fails on the starting
-  commit, it was already flaky: record it, do not skip or loosen it.
-- **A tool hangs or errors:** put a time limit on every reviewer call; retry
-  once, then use the next reviewer.
-- **The session dies:** a new session reads `log.md` and `ledger.md`, runs
-  `git status` and `git log <start>..`, runs the gate on `HEAD`, and carries on
-  from the next round.
-- **Never leave the tree dirty.** Whenever you stop after the first round has
-  begun, the tree is clean and `HEAD` passes the gate. (If the ground was
-  broken before you started, you stopped without changing anything.) Uncommitted work that does not pass is
-  discarded and recorded in the ledger, not left behind.
+## Finish
 
-## Finishing
+Use remaining budget to check the original scope map for gaps and reassess
+cross-unit duplication, ownership, and dependencies affected by the changes.
+Review any final corrections. Optional slow checks, device tests, or release
+builds are useful when available; checks needed to establish a change's safety
+belong before keeping that change, not just in this final phase. If a late check
+reveals a regression, fix or revert it. Push only when authorized, after the
+final state passes required checks and outstanding review objections are resolved.
 
-1. **One whole-repository pass,** if the budget allows. Scoped rounds only see
-   what changed. Ask the reviewer for one review of the whole codebase against
-   the focus and the list, with the ledger. This finds what rounds cannot:
-   dead code, duplication across files, configuration that only breaks in
-   release builds, lifecycle problems. Fix what holds up, then run scoped
-   rounds on those fixes under the same stop rules.
-2. **Run the slow checks** the project keeps out of its everyday gate, if any:
-   end-to-end or device tests, release builds. Say which ran and how.
-3. **Report**, in plain words:
-   - rounds run, which stop rule ended them, and what kinds of problems they
-     found;
-   - what changed, grouped by area, not by commit, with behaviour changes
-     listed apart from structural ones;
-   - decisions the person should check: rejected findings and why, contested
-     findings, anything that touches observable behaviour, a spec followed over
-     a reviewer;
-   - what is left: deferred and noticed items from the ledger;
-   - what you could not verify, and why;
-   - where the work is: branch, last commit, pushed or not, the command to
-     push if not, and the path of the log and ledger.
+Report in plain words:
+
+- Stop rule, rounds, and actual scope covered, including uninspected units.
+- Structural improvements by area, with the concrete maintenance burden removed;
+  list behavioural fixes separately. Fewer lines alone is not an improvement.
+- Required and optional checks actually run, platforms/configurations covered,
+  unavailable checks, and whether review used a different model.
+- Rejected, contested, and deferred work with reasons; any remaining risks.
+- Branch, final SHA, push status, and paths to the log and ledger.
 
 ## Reviewer
 
-Use a different model from yourself: models judge their own output too kindly.
-Try, in order, whichever is installed and is not you:
+Use a different model when available: a separate agent, installed CLI, or API
+can provide it. Choose from existing capabilities and use documented read-only,
+noninteractive options with a timeout; close standard input for CLIs that might
+otherwise wait. The reviewer inspects and reports; the main worker edits.
 
-| Tool | Command |
-| --- | --- |
-| Codex | `codex exec --sandbox read-only --cd <repo> "<prompt>" < /dev/null` |
-| Claude Code | `claude -p "<prompt>"` from the repo |
-| Gemini CLI | `gemini -p "<prompt>"` from the repo |
-| Antigravity CLI | `agy --add-dir <repo> --print="<prompt>"` |
-| Qwen Code | `qwen -p "<prompt>"` from the repo |
+Start fresh review context per round, carrying only project context, coverage,
+validation evidence, and the ledger. Give repository access rather than an
+isolated diff. If useful, independent package/platform reviews can run in
+parallel, with explicit scopes and one worker resolving their findings. If no
+different model is available, make a separate fresh review pass yourself and
+state that limitation. Never fabricate independent review.
 
-- Always close standard input (`< /dev/null`); some tools wait for input and
-  hang a background run.
-- Run the reviewer read-only where it can be. It reviews; you change code.
-- Start a fresh reviewer each round, so it does not argue for its earlier
-  findings; the ledger carries what it needs to know.
-- Missing context causes false findings: let it read the repository, not only
-  the diff.
-- Its output can be long. Read only its final answer.
-- Review the parts of a large codebase in parallel (one reviewer per platform
-  or package), each scoped to its own part.
-- If no other model is installed, review yourself in a fresh pass with the
-  same prompt, and say so in the report.
+## Boundaries
 
-## Rules
+Stay autonomous within the authorized work. Do not stop for approval of routine
+extractions, consolidation, module reorganization, or characterization tests.
+Do not cross unapproved destructive or outward-facing boundaries such as force
+pushes, publishing, deployment, live-data migrations, or dependency upgrades;
+defer dependent findings and continue independent work.
 
-- **Stop and ask** before anything destructive or outward-facing that the
-  person has not allowed: force pushes, deleting branches or data, publishing,
-  changing infrastructure, adding dependencies.
-- **Never weaken a check to pass it.** Do not skip, delete, or loosen a test or
-  lint rule, or special-case a test, to get green. Fix the cause.
-- **Never claim more than you ran.** A step you skipped, a test you could not
-  run, a finding you did not fix: say so.
-- **Do not narrate.** While working, give short status lines. Save detail for
-  the report.
+Never weaken checks to obtain green, or claim more than you inspected and ran.
+Give short progress updates while working; keep the detailed record in the log.

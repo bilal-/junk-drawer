@@ -26,8 +26,8 @@
     },
     {
       "name": "night-shift",
-      "version": "1.0.0",
-      "summary": "Reviews, fixes, and refactors a codebase in rounds, with a second model as reviewer, until a round comes back clean. Built to run while you sleep.",
+      "version": "1.1.0",
+      "summary": "Autonomously refactors a whole codebase or focused area overnight. Finds duplication, tangled responsibilities, and poor boundaries; makes small tested commits with a second-model review and tracks the original scope until clean or the budget runs out.",
       "category": "Developer Tools",
       "keywords": [
         "code-review",
