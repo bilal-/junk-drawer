@@ -14,7 +14,7 @@ harnesses. Install one, or the whole drawer.
 | Skill | What it does |
 | --- | --- |
 | [`docsmith`](skills/docsmith/SKILL.md) | Reviews or builds decks, spreadsheets, documents, Markdown, and wiki pages: structure, layout, accessibility, editability, formulas, and charts. Follows your DESIGN.md, brand, or template. Fixes the small things, flags the big ones. |
-| [`night-shift`](skills/night-shift/SKILL.md) | Autonomously refactors a whole codebase or focused area overnight. Finds duplication, tangled responsibilities, and poor boundaries; makes small tested commits with a second-model review and tracks the original scope until clean or the budget runs out. |
+| [`night-shift`](skills/night-shift/SKILL.md) | Audits or improves a whole repository by default, or a supplied branch, PR, commit range, path, or feature. Sub-agents map connected code; a lead synthesizes architecture, defects, duplication, and hot-path costs. |
 | [`project-backup`](skills/project-backup/SKILL.md) | Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, to keep wherever you like or carry to a new laptop. |
 | [`unslop`](skills/unslop/SKILL.md) | Makes a draft read like a person wrote it: strips chat residue, checks facts and story, cuts the patterns that mark text as machine-written, keeps the writer's voice. |
 <!-- /skills -->

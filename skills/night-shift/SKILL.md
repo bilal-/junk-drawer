@@ -1,13 +1,14 @@
 ---
 name: "night-shift"
-description: "Autonomously review, fix, and refactor a whole codebase or focused area overnight. Maps architecture, finds duplicated knowledge, poor boundaries, tangled responsibilities, and other concrete maintenance problems, then works through a ranked backlog in small tested commits. Refactors preserve behaviour; bug fixes need regression tests; a second model reviews. Tracks scope coverage and findings to prevent premature completion and repeated rejected changes. Adapts to the project's languages, frameworks, and runtimes. Use for unattended refactoring, codebase cleanup, architecture improvement, or review-and-fix rounds until clean or the budget runs out."
+description: "Autonomously audit or improve a whole repository by default, or a user-specified branch, PR, commit range, path, or feature. Uses bounded sub-agent discovery and cross-unit synthesis to find architectural maintenance problems, defects, duplication, and repeated hot-path work. For improvement runs, makes small tested commits and seeks independent review. Tracks scope coverage and findings across rounds. Use for recurring codebase maintenance or focused review and refactoring of a supplied target."
 ---
 
 # Night shift
 
-Work through the requested codebase autonomously, finding and removing concrete
-obstacles to understanding and changing it. Leave a tested, committed branch,
-with evidence for the improvements and an honest account of what remains.
+Work through the requested target autonomously, finding concrete obstacles to
+understanding and changing it. For improvement runs, leave a tested, committed
+branch. For audits, leave a source-backed findings report. In both cases,
+account honestly for what remains.
 
 Discovery and regression review are separate jobs. A clean review of your last
 commits does not mean the untouched codebase has been assessed. Continue through
@@ -18,18 +19,35 @@ the original scope until no worthwhile work remains or a stop rule applies.
 Ask only for information that blocks the work. Infer the rest and record the
 choice. Routine refactoring decisions are yours to make within the user's scope.
 
-- **Scope:** whole repository by default; otherwise the requested paths, feature,
-  package, or commit range. Resolve commit references to fixed SHAs. For a commit
-  scope, inspect changed code and its affected relationships. Read callers and
-  dependencies as needed; that does not expand permission to edit them.
+- **Scope:** the whole repository when the user supplies no target. Otherwise use
+  the supplied branch, PR, commit or commit range, path, feature, or package.
+  Resolve change targets to fixed base and head SHAs. For "since X," use X as
+  the base; for one commit, use its parent; for a branch or PR, use the stated
+  base or infer its merge base with the default/upstream branch. Record the
+  choice. For a change target, review the diff plus affected callers,
+  dependencies, contracts, platform counterparts, and existing implementations
+  of newly added rules. A path or feature target includes its relevant
+  boundaries. Inspecting adjacent code does not turn a targeted run into a
+  whole-repository sweep.
+- **Action:** an audit or review request reports findings without editing; a
+  night-shift, fix, improve, or refactor request also implements verified
+  in-scope findings. For a change target with fixes authorized, edit necessary
+  related consumers or shared contracts to complete a finding from that change;
+  leave unrelated cleanup for a repository sweep. Respect any narrower edit
+  boundary the user gives.
 - **Focus:** `bugs`, `refactor`, or `both`. Default: `both`. Structural discovery
   is required for `refactor` and `both`; do not let bug hunting replace it.
+  Inspect repeated hot-path work in relevant units for any focus unless the
+  user explicitly excludes performance.
 - **Bar:** confirmed high and medium findings by default; `all` includes low
   findings. High means a reachable correctness, data, or security risk. Medium
-  includes demonstrated maintenance difficulty. Low means a small, confirmed
+  includes demonstrated maintenance difficulty or repeated runtime cost on a
+  reachable path that scales with normal use. Low means a small, confirmed
   improvement. Taste is not a finding at any bar.
-- **Budget:** the user's round, time, or spend cap; default 8 rounds. A round is
-  one discovery-and-change batch followed by one review. Reviewing corrections
+- **Budget:** the user's round, time, or spend cap; default 8 rounds. An
+  improvement round is a discovery-and-change batch followed by review; an
+  audit round is discovery and independent validation of findings and coverage.
+  Reviewing corrections
   consumes another round; no unbounded inner review loop. Preparation, tests, and
   reviewers consume the same time/spend budget. Reserve enough to validate and
   leave a clean tree; do not start work you cannot safely finish.
@@ -48,24 +66,40 @@ choice. Routine refactoring decisions are yours to make within the user's scope.
    [stack detection](references/stack-detection.md), its common checks, and only
    the linked sections relevant to the scope. Use available specialist guidance
    when helpful; another skill is not required.
-3. **Establish a green baseline.** Start with a clean working tree and run the
-   required project gate, including its full required test suite. Stop before
-   editing if it fails or cannot run. Record commands, test count, platforms,
-   build configurations, and results. Separate optional checks from required
-   ones. Missing optional device or integration checks need not stop unrelated
-   work, but defer changes whose safety depends on them.
-4. **Use a working branch.** Never change the default branch directly.
-5. **Start the log and ledger** in `$(git rev-parse --git-dir)/night-shift/`,
-   outside tracked files. `log.md` records the starting SHA, budget, scope map,
-   validation matrix, rounds, and checkpoints. `ledger.md` is the ranked backlog
-   and history of findings. Keep both concise enough to resume from.
+3. **Establish baseline.** Record the starting tree and run the required project
+   gate, including its full required test suite. Record commands, test count,
+   platforms, build configurations, and results. A failing or unavailable gate
+   blocks edits whose safety depends on it; an audit-only run can continue
+   read-only and report the gap. Separate optional checks from required ones.
+   Missing optional device or integration checks need not stop unrelated work,
+   but defer changes whose safety depends on them.
+4. **Use a working branch for edits.** Never change the default branch directly.
+   Audit-only runs do not create commits.
+5. **Start or reconcile the log and ledger** in
+   `$(git rev-parse --git-common-dir)/night-shift/`, outside tracked files.
+   `log.md` records starting SHA, target/base/head, budget, scope map,
+   validation matrix, rounds, and checkpoints. `ledger.md` records ranked
+   findings and history. Reuse relevant prior findings and coverage for recurring
+   runs when available; recheck them against changed code. In a fresh clone,
+   record that prior coverage was unavailable rather than inventing continuity.
+   Keep both files concise enough to resume from.
 6. **Map the original scope into meaningful review units:** packages, features,
    subsystems, or connected modules, not arbitrary file-count chunks. Record
    each unit's responsibility, entry points, dependencies, state/resource
-   owners, checks, and coverage status: `pending`, `inspected`, or `revisit`.
+   owners, checks, and coverage status per applicable lens (architecture,
+   defects, hot paths): `pending`, `inspected`, or `revisit`.
    Exclude generated and third-party code unless specifically in scope; inspect
    its contracts when relevant. Reading a directory listing or README is not
    source review. In a large repository, work through units across rounds.
+
+7. **Plan discovery.** Read the
+   [discovery graph](references/discovery-graph.md). Mark connected review units
+   and boundary flows in the target. In each round, spawn available sub-agents
+   for a bounded batch with entry points, edges, lenses, and read-only reporting
+   instructions. Synthesize their reports across boundaries before choosing
+   changes. The lead owns findings, edits, tests, and final coverage. If agents
+   are unavailable, follow the graph sequentially without claiming independent
+   coverage.
 
 ## Find worthwhile refactors
 
@@ -112,9 +146,40 @@ adapters, compatibility paths, and test seams. Public APIs, wire/file formats,
 error behaviour, ordering, defaults, and UI state lifetime are contracts; changing
 them requires a confirmed defect within bug-fix scope or separate authorization.
 
+Structural review must connect local responsibilities into an end-to-end view:
+who owns each invariant and resource, which callers coordinate it, and what must
+change together across packages or platforms. Local cleanup is not a substitute
+for resolving a confirmed cross-unit problem. An invalid UI test that no longer
+exercises its claimed interaction is a finding even when the baseline suite is
+green; verify the mismatch and repair or remove it within scope.
+
+## Find hot-path costs
+
+Inspect repeated work in UI and request-serving units for any focus unless
+performance was explicitly excluded.
+Read [hot-path discovery](references/hot-paths.md). Trace per-frame, per-row,
+per-appearance, or per-request work and its scale. Enter evidence-backed
+candidates in the ledger before measurement; require repeatable comparison
+before keeping a performance change. Record unusually large assets and
+hand-built infrastructure when they contribute to the cost. A maintained
+third-party library may be a deferred option, not an automatic dependency
+change. This lens complements, and never replaces, structural discovery.
+
 ## Each round
 
+For audit-only runs, perform discovery, verify candidate findings against
+source, obtain independent review of findings and coverage, and report. Skip
+implementation, commit, and change-recovery steps.
+
 ### 1. Discover and rank
+
+Dispatch the next bounded batch of units and boundary flows from the target.
+Reconcile agent reports into one ledger and verify candidates against source.
+For change targets, search the repository for existing equivalents of rules,
+helpers, types, and mappings added or altered by the diff. Mark findings as
+introduced, worsened, or pre-existing; prioritize the first two. Track
+architecture and hot-path coverage separately where applicable. A clean
+file-level report does not establish a clean cross-unit design.
 
 Inspect the next connected part of the original scope, prioritizing central
 flows, known duplication, and risky boundaries. Carry forward unresolved review
@@ -141,6 +206,10 @@ Check the finding yourself; a confident reviewer is not proof.
 
 - **Defect:** identify the input and execution path, then reproduce it with a
   failing regression test. Without a reproducer, reject or defer it as unproven.
+- **Performance:** identify a reachable repeated path and establish its cost
+  with a comparable workload before changing it. When frame timing is
+  unavailable, deterministic work counts can prove repeated parsing, decoding,
+  hashing, or retries; do not claim a latency gain from counts alone.
 - **Structure:** confirm the relevant usages, copies, ownership, and boundaries.
   Before deleting or renaming, check configuration, reflection, registration,
   templates, generated consumers, external interfaces, and platform counterparts.
@@ -214,25 +283,35 @@ review; any authorized push belongs after final review and required checks.
 
 ### 5. Review independently
 
-Give the reviewer the round's commits or diff, read access to surrounding code,
+Discovery agents are not the independent reviewer of their resulting changes.
+For an audit-only run, ask the reviewer to challenge findings and source
+coverage rather than assess a nonexistent change.
+
+Give the reviewer the round's commits or diff for improvements, or the target and findings for audits, plus read access to surrounding code,
 the selected discovery units, project rules/contracts, focus/bar, relevant stack
 checks and versions, validation results/gaps, and rejected/contested ledger entries.
 Keep reviews bounded by connected units; do not repeatedly rescan the entire
 repository just to review a small fix.
 
-Ask for two assessments:
+For improvement runs, ask for two assessments. For audits, validate findings,
+source coverage, and gaps without a preservation assessment of a nonexistent diff:
 
-- **Preservation:** regressions, missed consumers, contract/lifecycle changes,
-  weakened tests, and unsupported equivalence claims. Inspect all changed code
-  and affected callers; green tests alone do not establish preservation.
-- **Design and discovery:** does the change remove the stated difficulty across
-  callers, or relocate it, add configuration/indirection, or join unrelated
-  concepts? What worthwhile findings remain in the assigned original-scope
-  units, including untouched code and cross-unit boundaries?
+- **Preservation (improvements):** regressions, missed consumers,
+  contract/lifecycle changes, weakened tests, and unsupported equivalence
+  claims. Inspect all changed code and affected callers; green tests alone do
+  not establish preservation.
+- **Design and discovery:** for improvements, does the change remove the stated
+  difficulty across callers, or relocate it, add configuration/indirection, or
+  join unrelated concepts? For audits, are reported findings supported by
+  inspected source and are important boundaries missing? What worthwhile
+  findings remain in the assigned target units and cross-unit boundaries?
 
 Each finding needs severity, `file:line`, concrete evidence, and a suggested fix;
-structural ones need payoff and preservation requirements. Request actual source
-coverage and gaps separately. In each assessment, use `NO FINDINGS` only when
+structural ones need payoff and preservation requirements. For UI and
+request-serving units, also ask what runs per frame, row, appearance, or request,
+whether repeated work is avoidable, and which hot-path source was inspected.
+Request actual source coverage and gaps separately. In each assessment, use
+`NO FINDINGS` only when
 nothing qualifies within that coverage. A failed or blocked review is not clean.
 
 Verify new findings by the same rules. Make corrections the next round's priority
@@ -250,10 +329,15 @@ diff is permission to continue discovery, not a reason to end it.
 
 ## Stop rules
 
+- **Audit complete:** the supplied target or default repository scope and its
+  relevant boundaries have been inspected to the requested bar; findings and
+  uninspected gaps are reported. An audit may be complete while findings remain.
 - **Clean:** all original-scope units and relevant boundaries have been inspected
   for the requested focus, no qualifying candidates or unresolved findings remain,
   and the final changes have passed review and required checks. Check the scope
-  map and ledger together before claiming this. Do not expand a path/commit-scoped
+  map, graph edges, applicable architecture and hot-path coverage, and ledger
+  together before claiming this. For a targeted improvement run, clean refers to the target
+  and its impact set, not the untouched repository. Do not expand a targeted
   run into a whole-repository cleanup at the end.
 - **Budget:** the round, time, or spend cap is reached. Finish or roll back the
   current step within the reserved cleanup budget. Report pending coverage and
@@ -302,13 +386,15 @@ final state passes required checks and outstanding review objections are resolve
 
 Report in plain words:
 
-- Stop rule, rounds, and actual scope covered, including uninspected units.
-- Structural improvements by area, with the concrete maintenance burden removed;
-  list behavioural fixes separately. Fewer lines alone is not an improvement.
+- Target, resolved base/head for change scopes, action (audit or improvement),
+  stop rule, rounds, and actual coverage including uninspected units.
+- Structural improvements by area and the concrete maintenance burden removed,
+  or source-backed audit findings; list behavioural fixes separately. Fewer
+  lines alone are not an improvement.
 - Required and optional checks actually run, platforms/configurations covered,
   unavailable checks, and whether review used a different model.
 - Rejected, contested, and deferred work with reasons; any remaining risks.
-- Branch, final SHA, push status, and paths to the log and ledger.
+- Branch, final SHA, and push status when edited; paths to the log and ledger.
 
 ## Reviewer
 

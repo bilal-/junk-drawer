@@ -402,3 +402,15 @@ function with a direct call changes a dependency's synchronous throw from a
 rejected promise into an immediate exception. A shorter wrapper is therefore
 not inherently behaviour-equivalent. This observed counterexample supports the
 common contract checklist rather than a blanket ban on inlining wrappers.
+
+## 2026-10-19 field report: architecture and hot paths
+
+The owner-reported case shared on 2026-10-19 describes five night-shift runs on a SwiftUI/Compose books app that ended clean while scrolling remained slow. A later performance investigation found repeated font parsing during Compose rendering, image decoding and missing-artwork retries during scrolling, computed SHA-256 IDs read from view bodies, repeated flattening and linear lookup, and an oversized bundled font. The report describes a frame-time improvement after the font fix; the precise numbers are owner-reported, not independently reproduced here. Evidence: weak for prevalence or exact impact, strong enough as a concrete failure mode for this skill's discovery process.
+
+The prior workflow required measurement *before changing* performance code but did not explicitly inspect repeated render or request work. It also asked reviewers to assess architecture without a hot-path question. The revision separates finding a reachable repeated cost from proving an optimization, adds an applicable coverage lens, and keeps comparison on a realistic common workload before retaining a performance change. It treats stale UI tests as findings when they no longer exercise the claimed interaction, even if the suite passes.
+
+The owner also requested a graph of bounded sub-agent scans followed by holistic architecture synthesis. This addresses the gap between local file review and cross-unit ownership, duplication, and dependency problems. Agents report inspected paths, edges, findings, and gaps; a lead reconciles reports, verifies source, and inspects the connecting flows. The graph is a workflow design grounded in that observed local-versus-system gap, not a claim that more agents alone improve review quality. Parallel scanning uses the same time and spend budget as verification and cleanup.
+
+## 2026-10-19 scope clarification after review
+
+The owner clarified that a supplied target may be a branch, PR, series of commits since a base, path, or feature; without a target, night-shift should examine the full repository. This is a scope rule, not a PR-specific mode. A change target requires a resolved base/head and an impact graph of affected callers, contracts, platform counterparts, and existing equivalents. An audit request is read-only; an improvement request permits verified in-scope fixes. The prior wording named only paths, features, packages, and commit ranges, leaving branches and audit-only work ambiguous. The revised skill makes the default and target resolution explicit. This is owner-provided product intent, not an empirical claim.
