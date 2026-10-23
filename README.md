@@ -13,6 +13,7 @@ harnesses. Install one, or the whole drawer.
 <!-- skills: written by tools/build.py from drawer.json -->
 | Skill | What it does |
 | --- | --- |
+| [`crossfire`](skills/crossfire/SKILL.md) | Turns an idea or draft into a design and plan that holds up: finds the agent CLIs you have (Claude Code, Codex, Gemini CLI, Antigravity, Qwen, OpenCode, Pi), runs adversarial reviews from different models in turn, revises after each, and hands you the decisions that are yours. |
 | [`docsmith`](skills/docsmith/SKILL.md) | Reviews or builds decks, spreadsheets, documents, Markdown, and wiki pages: structure, layout, accessibility, editability, formulas, and charts. Follows your DESIGN.md, brand, or template. Fixes the small things, flags the big ones. |
 | [`night-shift`](skills/night-shift/SKILL.md) | Audits or improves a whole repository by default, or a supplied branch, PR, commit range, path, or feature. Sub-agents map connected code; a lead synthesizes architecture, defects, duplication, and hot-path costs. |
 | [`project-backup`](skills/project-backup/SKILL.md) | Backs up what Git cannot give back: signing keys, credentials, private config, and local data. Builds a dated, owner-only folder with restore notes and checksums, to keep wherever you like or carry to a new laptop. |

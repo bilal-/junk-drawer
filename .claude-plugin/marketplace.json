@@ -8,6 +8,29 @@
   },
   "plugins": [
     {
+      "name": "crossfire",
+      "description": "Turns an idea or draft into a design and plan that holds up: finds the agent CLIs you have (Claude Code, Codex, Gemini CLI, Antigravity, Qwen, OpenCode, Pi), runs adversarial reviews from different models in turn, revises after each, and hands you the decisions that are yours.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Bilal",
+        "url": "https://github.com/bilal-"
+      },
+      "homepage": "https://github.com/bilal-/junk-drawer/tree/main/skills/crossfire",
+      "category": "developer-tools",
+      "keywords": [
+        "design-review",
+        "planning",
+        "multi-model",
+        "adversarial-review",
+        "architecture"
+      ],
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/crossfire"
+      ]
+    },
+    {
       "name": "docsmith",
       "description": "Reviews or builds decks, spreadsheets, documents, Markdown, and wiki pages: structure, layout, accessibility, editability, formulas, and charts. Follows your DESIGN.md, brand, or template. Fixes the small things, flags the big ones.",
       "version": "1.0.0",
@@ -110,6 +133,7 @@
       "source": "./",
       "strict": false,
       "skills": [
+        "./skills/crossfire",
         "./skills/docsmith",
         "./skills/night-shift",
         "./skills/project-backup",

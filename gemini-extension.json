@@ -1,5 +1,5 @@
 {
   "name": "junk-drawer",
-  "version": "1.0.0+a3409cfe",
+  "version": "1.0.0+b4709e6d",
   "description": "Where useful agent skills end up. Works with Claude Code, Codex, Gemini CLI, and most other agent harnesses."
 }
