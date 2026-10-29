@@ -575,3 +575,17 @@ handoff when state cannot be saved. Review-limited work cannot claim unqualified
 completion. Supporting corrections clarify dropped tasks, dependency arrows,
 focus-specific tooling findings, and formatter side effects. No extra version
 raise is needed before the first publication of 1.4.0, per the repository rule.
+
+A follow-up reviewer found that unique log ownership did not establish exclusive
+ownership of the editable checkout. Two runs could still mix edits, validation,
+commits, or recovery in one worktree. The correction requires checkout ownership
+or isolation from a fixed snapshot, and read-only progress when that cannot be
+established. Run-record isolation alone is not treated as execution isolation.
+
+Claude's correction review accepted the six original fixes but found that reading
+every prior run in full would grow reconciliation cost without bound. Current
+runs now publish consolidated summaries and identify the exact older checkpoints
+they incorporate. Future runs inspect compatible summaries and unreconciled
+checkpoints, retrieving old detail on demand. Compaction occurs in the new run's
+own records; it does not require rewriting another run's evidence or assume that
+a live run will never publish a newer checkpoint.

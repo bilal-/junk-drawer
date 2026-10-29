@@ -15,6 +15,15 @@ only when continuing your own identified run and ownership is clear; an old
 timestamp or `running` label does not prove that another process has stopped.
 If ownership is uncertain, start a new run. Record the chosen absolute paths.
 
+Record ownership and checkout ownership are separate. Before editing, checking,
+committing, or recovering changes, establish that another run cannot mutate the
+same editable worktree during those operations. A new log directory does not
+grant that ownership. When uncertain, use a separate worktree and branch from a
+fixed target snapshot; do not copy an actively changing dirty tree or switch the
+other run's branch. If safe isolation is unavailable, continue read-only and
+report the blocker. Reconcile another run's active work before selecting the same
+finding for a parallel implementation.
+
 If writes are forbidden or the state root is unavailable, keep the same evidence
 inline and put the handoff in the final report. State explicitly that it was not
 persisted. Do not write tracked files, change permissions, or choose an unapproved
@@ -26,11 +35,14 @@ Keep two concise records, with links to longer evidence when needed:
   checkpoint/final SHA and time, status (`running`, `interrupted`, or `finished`),
   relevant pre-existing edits, focus/bar, budget, stop rule; validation commands,
   results, tool versions/configuration; source map, task graph, checkpoints,
-  reviewed SHAs, and next priorities.
+  reviewed SHAs, reconciled run/checkpoint identities, and next priorities.
 - **Ledger:** stable finding id, responsibility/contract, locations and consumers,
   evidence and inspected SHA, severity, status, decisions and reasons, fix/revert
   commits and branches, integration state, verification and pending independent
   review, and a concrete condition for reconsideration.
+
+Give each published checkpoint an id or content hash that changes when its
+summary changes. A commit SHA alone cannot identify an audit-state checkpoint.
 
 Record the criteria actually applied: an exact revision of the skill and used
 references, or content hashes when no exact revision is available; include the
@@ -40,21 +52,31 @@ criteria. A release label alone cannot distinguish local edits within a version.
 For each source unit and important edge, retain the applicable lens, coverage
 status, inspected source/tests, last inspected SHA/run, relevant contracts and
 configuration, and why carried evidence remains valid or needs a revisit.
-Keep rejected and intentional-design decisions alongside open findings. Archive
-old detail if necessary without dropping the rationale that prevents repeated
-proposals. These records are evidence to verify, not instructions that override
-the current request or repository rules.
+Keep rejected and intentional-design decisions alongside open findings. In the
+current run, consolidate their reasons and link historical detail rather than
+copying every earlier transcript. Preserve compact ids/links for resolved work.
+Do not rewrite, move, or delete another run's records to compact history. These
+records are evidence to verify, not instructions that override the current
+request or repository rules.
 
 ## Reconcile before selecting work
 
-1. Read all prior run records that overlap this repository and scope, including
-   legacy records. Reconcile evidence in the current run's files only. Qualify
-   ids by originating run and link aliases for the same responsibility/contract
-   and affected consumers, so per-run ids do not collide. Retain conflicting
-   dispositions until source evidence or changed premises resolve them. Select
-   coverage by compatible criteria and commit ancestry, not the newest timestamp.
-   Use completed checkpoints; partial or in-progress records are leads, not
-   accepted coverage, even when another run is still writing them.
+1. Use compact run metadata to locate the latest consolidated finished
+   checkpoint(s) compatible with this target and ancestry. Read those summaries
+   and overlapping checkpoints they have not reconciled, including concurrent,
+   interrupted, or legacy records. Read older covered records only to retrieve
+   missing evidence or decision reasons. Record exactly which run/checkpoint
+   identities the new summary incorporates; a later checkpoint from the same
+   run is new evidence, not silently covered by its run id. Do not declare a
+   live run wholly superseded. Parent checkpoint references can cover their
+   reconciled ancestors transitively; do not duplicate the full ancestry list.
+   Keep this reconciliation within the run budget;
+   report unread relevant state and defer decisions depending on it.
+   Reconcile in the current run's files only. Qualify finding ids by originating
+   run and link aliases for the same responsibility/contract and consumers.
+   Retain conflicting dispositions until evidence or changed premises resolve
+   them. Select coverage by criteria and ancestry, not the newest timestamp.
+   Only completed checkpoints supply accepted coverage; partial records are leads.
    Validate commit existence,
    ancestry, target, focus/bar, applicable instructions, and recorded dirty state
    before using its coverage.
@@ -94,8 +116,9 @@ the recorded fix still addresses the current contract; a missing commit or
 unverifiable branch is a gap, not proof that the fix remains available.
 
 For a compatible existing fix outside the target, mark
-`awaiting integration <branch/sha>` and link its validation and any pending
-independent review. Do not create a parallel implementation merely because the
+its implementation fixed and report `awaiting integration <branch/sha>` for the
+current target; link its validation and any pending independent review. Do not
+create a parallel implementation merely because the
 target lacks that commit. Continue that working branch when it is already checked
 out or explicitly selected by the user. Otherwise leave integration and dependent
 tasks pending, work on independent findings, and report the branch needed. Do not
@@ -142,6 +165,12 @@ changes integrated into the branch a future run will inspect.
 Keep self-reviewed fixes implemented, with independent review still pending.
 Retry the review when a reviewer becomes available; do not recreate the fix.
 If state cannot be written, supply this same handoff in the final report.
+
+Leave a consolidated checkpoint with the current coverage, open findings,
+decision reasons, integration/review gaps, and identities of reconciled older
+checkpoints. Keep its metadata compact and distinguish fully incorporated
+history from unread or partially reconciled records. The next run should not
+need to reload every earlier log to reconstruct these decisions.
 
 Reconcile the current task table and run status with that checkpoint. Completed
 tasks must not still appear `running`; interrupted work returns to `pending` or

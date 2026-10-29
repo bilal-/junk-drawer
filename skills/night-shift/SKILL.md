@@ -92,8 +92,12 @@ choice. Routine refactoring decisions are yours to make within the user's scope.
    simply because a new run started. If state cannot be written, keep an inline
    record and include the handoff in the final report.
 5. **Use a working branch for edits.** Reconcile existing implementations before
-   creating a branch. Continue a compatible working branch already checked out
-   or explicitly selected by the user. Never change the default branch directly.
+   creating a branch. Continue an already checked-out night-shift branch recorded
+   for compatible work, or one explicitly selected by the user; otherwise create
+   a dedicated branch from the target. Only mutate a checkout this run owns.
+   If another run may be editing it, use an isolated worktree and branch
+   from a fixed target snapshot. If safe isolation cannot be established, continue
+   read-only and report editing blocked. Never change the default branch directly.
    Audit-only runs do not create commits.
 6. **Map the original scope into meaningful review units:** packages, features,
    subsystems, or connected modules, not arbitrary file-count chunks. Record
@@ -229,7 +233,7 @@ choose a coherent batch whose prerequisites and validation fit the budget.
 
 For each finding, record an id, severity, locations and consumers, evidence,
 expected payoff, and status. Use `candidate`, `verified`, `in-progress`,
-`fixed <sha(s)>`, `awaiting integration <branch/sha>`, `rejected: <reason>`,
+`fixed <sha(s)>`, `rejected: <reason>`,
 `contested: <reason>`, or `deferred: <reason>`. Record review status and integration
 state separately from implementation. Notice unrelated issues without editing
 outside scope. Rejected and contested entries accompany future reviews; revisit
