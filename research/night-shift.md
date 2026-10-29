@@ -589,3 +589,9 @@ they incorporate. Future runs inspect compatible summaries and unreconciled
 checkpoints, retrieving old detail on demand. Compaction occurs in the new run's
 own records; it does not require rewriting another run's evidence or assume that
 a live run will never publish a newer checkpoint.
+
+Both independent reviewers then caught a sequencing conflict: the baseline gate
+still preceded checkout isolation. Preparation now keeps early inspection
+read-only, establishes ownership/isolation, and runs project checks against the
+selected checkout. An unavailable safe checkout leaves validation and editing
+blocked rather than permitting checks against another run's changing tree.

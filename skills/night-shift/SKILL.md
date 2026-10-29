@@ -66,6 +66,10 @@ choice. Routine refactoring decisions are yours to make within the user's scope.
 
 ## Prepare
 
+Preparation before checkout selection is read-only. Defer project gates and
+candidate diagnostic tools until ownership or isolation is established; do not
+run checks on a checkout another run may mutate.
+
 1. **Learn the project.** Read applicable `AGENTS.md`, `CLAUDE.md`, README,
    `CONTRIBUTING`, build configuration, and relevant design documents. Project
    rules and contracts beat generic advice or a reviewer's preferences. Learn
@@ -78,27 +82,29 @@ choice. Routine refactoring decisions are yours to make within the user's scope.
    [stack detection](references/stack-detection.md), its common checks, and only
    the linked sections relevant to the scope. Use available specialist guidance
    when helpful; another skill is not required.
-3. **Establish baseline.** Record the starting tree and run the required project
-   gate, including its full required test suite. Record commands, test count,
-   platforms, build configurations, and results. A failing or unavailable gate
-   blocks edits whose safety depends on it; an audit-only run can continue
-   read-only and report the gap. Separate optional checks from required ones.
-   Missing optional device or integration checks need not stop unrelated work,
-   but defer changes whose safety depends on them.
-4. **Start or reconcile the log and ledger.** Read
+3. **Start or reconcile the log and ledger.** Read
    [recurring upkeep](references/recurring-upkeep.md) for state ownership,
    criteria fingerprints, compatibility, pending integration, and handoff.
    Reconcile prior state before assigning work; do not reset unfinished coverage
    simply because a new run started. If state cannot be written, keep an inline
    record and include the handoff in the final report.
-5. **Use a working branch for edits.** Reconcile existing implementations before
-   creating a branch. Continue an already checked-out night-shift branch recorded
-   for compatible work, or one explicitly selected by the user; otherwise create
-   a dedicated branch from the target. Only mutate a checkout this run owns.
-   If another run may be editing it, use an isolated worktree and branch
-   from a fixed target snapshot. If safe isolation cannot be established, continue
-   read-only and report editing blocked. Never change the default branch directly.
-   Audit-only runs do not create commits.
+4. **Own the checkout before running checks.** Reconcile existing implementations
+   before selecting a checkout. If another run may mutate it, use an isolated
+   worktree from a fixed target snapshot. If safe ownership or isolation cannot
+   be established, continue read-only, skip unsafe project commands, and report
+   the validation/editing blocker. For edits, continue an already checked-out
+   night-shift branch recorded for compatible work, or one explicitly selected
+   by the user; otherwise create a dedicated branch from the target. Never edit
+   the default branch directly. Audit-only runs do not create commits.
+5. **Establish the baseline in the selected checkout.** If checkout ownership or
+   isolation is unavailable, record the baseline as unavailable and continue
+   only with safe read-only inspection. Otherwise record the starting tree and
+   run the required project gate, including its full required test suite. Record
+   commands, test count, platforms, build configurations, and results. A failing
+   or unavailable gate blocks edits whose safety depends on it; audit-only work
+   can continue read-only and report the gap. Separate optional checks from
+   required ones. Missing optional device or integration checks need not stop
+   unrelated work, but defer changes whose safety depends on them.
 6. **Map the original scope into meaningful review units:** packages, features,
    subsystems, or connected modules, not arbitrary file-count chunks. Record
    each unit's responsibility, entry points, dependencies, state/resource
