@@ -23,6 +23,59 @@ boundaries deserve attention, but do not ignore the remaining original scope.
 Use Git history when available to corroborate co-changing responsibilities;
 absence of history does not prevent a source-grounded finding.
 
+## Assess design at three scales
+
+For the inspected scope, record concise observations at each scale:
+
+| Scale | Evidence to collect |
+| --- | --- |
+| System | Responsibilities, dependency direction, and the places a domain change must touch. |
+| Handoffs | Inputs, outputs, translations, error propagation, and coordination between owners. |
+| Implementation | Whether names, types, control flow, effects, and helper boundaries make an operation understandable. |
+
+Record useful patterns and deliberate tradeoffs as well as problems. Preserve
+them during changes. Keep uninspected areas explicit; a tidy function cannot
+establish sound system boundaries. Revisit these observations after refactoring
+to show what improved and what still needs work.
+
+## Business logic, UI, and dependency direction
+
+**Evidence:** trace an actual user operation through rendering/event handling,
+application policy, and persistence or external effects. Locate validation,
+eligibility, pricing, state transitions, and other business decisions. Show
+where a rule is embedded in a view/controller, repeated by a service, or requires
+UI/framework setup to exercise. Identify domain dependencies on presentation or
+storage implementation details and the concrete change cost they impose.
+
+**Improve:** give the domain decision one owner with explicit inputs and outputs,
+and let UI/transport consumers call it. Keep rendering, focus, animation, view
+identity, and interaction state at the presentation boundary. Keep effect
+coordination understandable and move storage details behind an appropriate
+existing seam. Verify the domain rule directly and the affected user flow across
+the boundary; pure-rule tests alone do not prove integration preservation.
+
+Separation is about responsibilities and dependency direction, not a prescribed
+folder layout or named architecture. A presentational condition belongs in UI.
+Do not introduce repositories, interfaces, or use-case classes for every function.
+Cross-platform implementations may retain separate code where runtime boundaries
+require it; make the common contract explicit and verify their agreement.
+
+## Shared constants and reusable rules
+
+**Evidence:** identify repeated values with the same domain meaning: a policy
+limit, protocol identifier, unit conversion, persisted key, or shared default.
+List consumers that must change together and any existing authoritative schema,
+configuration, domain module, or design token. Equal literal values alone do not
+mean the concepts are shared; two independent limits can both happen to be ten.
+
+**Improve:** place the named value or rule with its domain owner and reuse it
+across actual consumers. Prefer an existing source of truth. Keep independent
+concepts separate, preserve external/persisted values, and avoid a global
+constants or utilities module that couples unrelated features. A one-use named
+constant can clarify an otherwise unexplained unit or contract; blanket literal
+extraction is cosmetic churn. Do not replace reusable behaviour with a bag of
+shared values if callers still duplicate the same algorithm.
+
 ## Duplicated knowledge and drifting twins
 
 **Evidence:** enumerate every copy of the same domain rule, protocol mapping,
@@ -129,6 +182,9 @@ Before keeping the change, return to the original finding and its callers:
 
 - Is the rule now owned in fewer places? Does a caller need fewer internal
   details or coordination steps? Are independently changing concerns separated?
+- Can business decisions be exercised without UI setup? Do dependencies point
+  toward the intended rule owners? Do shared constants have a semantic owner,
+  and are remaining copies or platform differences explained?
 - Did the old path actually disappear after migration? Did a new helper add
   flags, callbacks, configuration, or dependencies that cancel the benefit?
 - Do tests still exercise the same meaningful boundary and preserved edge cases?

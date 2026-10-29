@@ -414,3 +414,145 @@ The owner also requested a graph of bounded sub-agent scans followed by holistic
 ## 2026-10-19 scope clarification after review
 
 The owner clarified that a supplied target may be a branch, PR, series of commits since a base, path, or feature; without a target, night-shift should examine the full repository. This is a scope rule, not a PR-specific mode. A change target requires a resolved base/head and an impact graph of affected callers, contracts, platform counterparts, and existing equivalents. An audit request is read-only; an improvement request permits verified in-scope fixes. The prior wording named only paths, features, packages, and commit ranges, leaving branches and audit-only work ambiguous. The revised skill makes the default and target resolution explicit. This is owner-provided product intent, not an empirical claim.
+
+## 2026-10-19 field report: missing style enforcement
+
+This incorporates the previously untracked `skills/night-shift/IMPROVEMENT-NOTES.md`.
+The owner reported that an Android/iOS repository had Android lint and compiler
+warnings but no formatter or style checker on either platform. Night-shift and
+other agent edits left unused and unordered imports; 84 of 167 files reportedly
+had unsorted imports while every run reported "clean". The counts and tooling
+state are owner-reported and have not been independently reproduced here.
+
+The notes requested four changes:
+
+- Before discovery, inspect actual CI enforcement of formatters, style linters
+  (examples included ktlint/detekt, swift-format/SwiftLint, ESLint/Prettier), type
+  checking, and dead-code/unused-import checks. Report missing coverage as a
+  medium finding with a concrete, pinned proposal.
+- Run a candidate tool with all rules and count findings per rule before
+  proposing it. Separate focused, mostly auto-fixable rules from wrapping,
+  indentation, and line-length rules that would rewrite most files. Broad layout
+  adoption belongs in its own commit after an explicit owner decision.
+- Check for contract changes from naming rules, such as persisted enum names,
+  and conflicts with framework conventions such as Compose function names.
+- Run the project's formatter/import sorter after scripted edits; do not leave
+  insertion-order imports behind.
+
+`references/quality-checks.md` makes these checks operational. Applicability and
+equivalent compiler/tool coverage matter: the report is evidence of missing
+coverage, not a reason to require every named tool on every repository. Broad
+diagnostics use available tools without fixes; installing a new dependency is
+still outside ordinary upkeep authority. When measurement or a verified version
+is unavailable, defer the proposal explicitly rather than inventing counts or
+a version pin. A narrow rule can still affect contracts, so fixability and layout
+impact are recorded separately from semantic risk. Evidence: a concrete reported
+failure mode, not a measured claim about the prevalence of lint gaps.
+
+## 2026-10-29 architecture, task contracts, and recurring upkeep (1.4.0)
+
+The owner clarified three defining objectives and authorized this revision:
+clean architecture with clear responsibility boundaries, business logic separate
+from UX, reusable rules and constants without duplicated knowledge; a graph
+that dispatches agents with concrete contracts and reaches a verified output;
+and regular repository upkeep that builds on earlier runs. These are product
+requirements, not empirical claims about any particular architecture or agent
+topology. The owner accepted evidence of change amplification, intentional
+platform differences, and avoiding speculative abstractions as the decision bar.
+
+The revision applies the structural reasoning already documented in sections 1
+and 7 to UI/domain boundaries and constants. Reuse requires a shared semantic
+contract, not matching syntax or values. Domain tests and consumer-flow checks
+serve different purposes. Before/after owners, dependency directions, migrated
+consumers, and justified remaining duplication make architectural completion
+reviewable without prescribing a framework or folder structure.
+
+The former graph described source relationships and parallel scans but left
+task acceptance and downstream prerequisites implicit. The work graph now
+connects bounded discovery, synthesis, follow-up investigation, verification,
+implementation when authorized, checks, independent review, and closure.
+Contracts define inputs/snapshot, scope, authority, output, acceptance, and
+budget; stale or incomplete reports cannot close coverage. This operationalizes
+the earlier local-versus-system failure report and the owner's requested graph.
+It is not evidence that more agents by itself improves quality.
+
+The earlier ledger guidance said to reuse coverage but did not define when it
+remained valid. Recurring upkeep now checks history, branch/scope compatibility,
+changed contracts and consumers, and validation assumptions; carries pending
+coverage forward; rotates attention to older units; and retains rejected
+decisions and deferred retry conditions. Isolated run state avoids overlapping
+worktrees overwriting each other's evidence. These are design safeguards against
+stale "clean" claims, repeated advice, oscillation, and starvation of untouched
+code. They are grounded in the owner's regular-upkeep requirement and the prior
+coverage/oscillation failure analysis, not measured guarantees of convergence.
+
+### Behavioral validation of this revision
+
+A fresh agent exercised an audit on an isolated, synthetic Python checkout
+repository with two commits, previous audit state, a rejected equal-constants
+proposal, and a pending reporting unit. It used separate bounded discovery and
+independent review tasks. The audit found a shipping policy duplicated between
+presentation and domain code, retained the justified constants decision, inspected
+the pending reporting boundary, and left source unchanged. Six existing tests
+and read-only characterization checks passed. These are observations from one
+small audit fixture, not evidence of production reliability or validation of the
+full implementation/recovery path.
+
+The run exposed ambiguity between the general medium-severity definition and
+the explicit medium classification of missing applicable quality enforcement.
+The revision now includes that coverage-gap category in the general bar and
+asks reviewers to verify applicability and equivalent coverage; an absent tool
+brand alone is not sufficient. The saved log also retained historical `running`
+labels beside its final checkpoint, motivating an explicit reconciliation of
+current task/run status at handoff. Source, lens, and task evidence remain
+distinct from a headline claim that an audit completed.
+
+A subsequent fresh-agent improvement run used that fixture's saved handoff.
+It committed six boundary-case characterizations in one additional test, then
+consolidated the renderer's pricing into the existing domain function. All seven
+tests passed and a fresh reviewer accepted preservation and design. The run kept
+tool adoption deferred and left a clean fixture tree. This exercises a narrow
+successful implementation path, not failure recovery or a large repository.
+Its handoff initially repeated the old severity disagreement despite the updated
+bar, reinforcing that recurring decisions must be reconciled with current
+project and skill requirements as well as source changes.
+
+## 2026-10-29 learning from Desloppify
+
+The owner requested lessons from [peteromallet/desloppify](https://github.com/peteromallet/desloppify),
+especially for code quality and architecture. Inspected repository snapshot:
+`3a7735d531a96b6a226bfbdc9fd662b14195f857`. These sources describe another
+project's design and implementation; they do not establish measured effectiveness.
+The rules below are adaptations to night-shift's existing scope, evidence,
+preservation, and budget requirements. Desloppify is not a runtime dependency.
+
+- The [review rubric](https://github.com/peteromallet/desloppify/blob/3a7735d531a96b6a226bfbdc9fd662b14195f857/desloppify/languages/_framework/review_data/dimensions.json)
+  informs separate system, handoff, and implementation observations, including
+  strengths worth retaining. Night-shift uses these as architectural evidence,
+  with concrete maintenance consequences required for changes.
+- The [workflow guide](https://github.com/peteromallet/desloppify/blob/3a7735d531a96b6a226bfbdc9fd662b14195f857/desloppify/data/global/SKILL.md)
+  informs initial design judgment without the author's preferred answer or a
+  prior quality verdict. Night-shift subsequently reconciles observations with
+  its ledger and proposed payoff; project constraints remain available throughout.
+- The [README workflow](https://github.com/peteromallet/desloppify/blob/3a7735d531a96b6a226bfbdc9fd662b14195f857/README.md)
+  distinguishes current execution from the wider backlog and groups related
+  work. Night-shift selects a coherent, bounded set of graph tasks, connects
+  symptoms to a shared cause, and verifies the result across their consumers.
+- The [verification prompts](https://github.com/peteromallet/desloppify/blob/3a7735d531a96b6a226bfbdc9fd662b14195f857/desloppify/app/commands/plan/triage/runner/stage_prompts_observe.py)
+  distinguish genuine findings from unsupported, exaggerated, or costly
+  proposals. Night-shift retains each source-backed disposition, without
+  counting dismissal or deferral as an implemented improvement.
+- The [plan checks](https://github.com/peteromallet/desloppify/blob/3a7735d531a96b6a226bfbdc9fd662b14195f857/desloppify/app/commands/plan/triage/runner/stage_prompts_sense.py)
+  inform verification of current symbols, consumers, executable steps, shared
+  files, and changes that affect later work. Night-shift orders dependencies and
+  rejects changes that add more complexity than they remove.
+- The [cross-run strategy prompt](https://github.com/peteromallet/desloppify/blob/3a7735d531a96b6a226bfbdc9fd662b14195f857/desloppify/app/commands/plan/triage/runner/stage_prompts_strategist.py)
+  informs looking for recurring rework, accumulating deferrals, and neglected
+  areas. Night-shift uses those observations to investigate shared causes and
+  change the next run's priorities.
+
+Night-shift keeps completion tied to reviewed source coverage, demonstrated
+benefit, preserved contracts, and required checks. An aggregate target score
+would not establish those properties. It also retains its own targeted-scope,
+permission, and test requirements, including tests as reviewable source and
+immediate verification when safety evidence changes during a batch.

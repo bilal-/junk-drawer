@@ -1,22 +1,131 @@
-# Distributed discovery graph
+# Discovery and delivery graph
 
-Use this when the scope spans multiple meaningful review units and sub-agents are available. With no user-supplied target, map the repository. With a branch, PR, commit range, path, or feature target, map that target and its affected relationships. The lead owns the scope map, ledger, edits when authorized, validation, and final judgment. Discovery agents inspect and report; they do not edit or commit. If agents are unavailable, the lead follows the same map and synthesis process sequentially and reports the limitation.
+Use a source graph to understand the system and a work graph to resolve its
+findings. Both fit in the run log; a table or adjacency list is sufficient.
+No orchestration framework is required. Map the requested target and its affected
+relationships, or the repository when no target was supplied. The lead owns
+scope, acceptance of evidence, edits, validation, and the final result.
 
-## Build and assign the graph
+## Map the source graph
 
-Map units by responsibility: feature, package, subsystem, or connected modules. Draw edges for calls, shared data and invariants, resource ownership, platform counterparts, and external contracts. A directory can contain several units; a unit can cross directories. Mark critical paths and risky edges. Assign bounded units to agents with enough context to follow relevant callers and dependencies beyond their assigned files. Assign a boundary or end-to-end flow to an agent when it spans units and a unit-level scan would miss ownership. Let adjacent agents inspect an overlapping seam when ownership or a shared contract is uncertain. Avoid many agents independently scanning the same easy files while central paths remain untouched.
+Nodes are responsibilities: features, packages, subsystems, or connected modules.
+Edges are calls, dependencies, shared rules/data, resource ownership, platform
+counterparts, and external contracts. Record dependency direction and the owner
+of each shared invariant. A directory can contain several nodes; a node can span
+directories. Mark entry points, critical flows, and uncertain boundaries.
 
-Give each agent a brief containing:
+Inspect complete flows across nodes. Assign a boundary or end-to-end flow when
+unit-level inspection could miss ownership or business logic leaking into UI.
+Overlapping inspection is useful at an uncertain seam; scanning the same easy
+files repeatedly while central paths remain untouched is not coverage.
 
-- Original scope (including resolved base and head for a change target), focus and bar, repository rules, relevant runtime/framework versions, unit responsibility, starting files or entry points, and graph edges to inspect.
-- Required lenses: architecture and change amplification for `refactor`/`both`; reachable defects for `bugs`/`both`; hot-path work for UI or request-serving units under `bugs`/`both`.
-- Return format: source and tests actually inspected; skipped paths; flows and graph edges traced; dependencies, owners, and contracts; concrete findings with `file:line`, callers or affected flows, evidence, severity, proposed owner or fix, preservation constraints, and verification needed. Report `NO FINDINGS` only for the inspected lens and coverage. Return uncertain leads separately, without elevating them to findings.
-- Read-only authority. Agents may inspect tests and history and run safe read-only checks, but the lead alone chooses and implements changes.
+## Derive tasks and their dependencies
 
-Parallelize independent units when useful. An agent may suggest a new edge or unit; the lead adds it to the map and assigns or inspects it. Timebox work against the run budget and reserve capacity for synthesis, changes, tests, and independent review. Agent completion is evidence of coverage only for source and paths it actually inspected.
+Tasks are units of work with explicit prerequisites and outputs. Typical paths:
 
-## Synthesize before changing code
+```text
+inspect UI -----\
+inspect domain --> synthesize ownership --> verify finding --> plan change
+inspect storage-/          |                                    |
+                           +--> inspect newly found consumer -----+
+                                                                |
+                     implement --> required checks --> independent review
+                                                            |
+                                  accept result + reconcile coverage
+                                                            |
+                                       next ready work or final handoff
+```
 
-Collect reports and reconcile shared seams. Add newly discovered edges to the graph and inspect or assign them in a second pass. The lead reads representative source and verifies each proposed finding, especially disputed ownership and cross-platform contracts. Combine local reports into an architecture view: where does a rule live, which callers coordinate it, which copies drift, and which resource or state lifetimes cross units? Trace at least one end-to-end flow across every central boundary implicated by a finding. A cluster of local clean reports is not proof that their connecting architecture is sound.
+The example shows dependencies, not a fixed sequence for every finding. Audit
+paths go from verified findings to independent validation and coverage closure;
+they omit implementation. Independent source inspections can run in parallel.
+Synthesis waits for the connected reports it needs. A new consumer, uncertain
+contract, or contradictory report creates a bounded investigation task whose
+output is a prerequisite for the affected decision. Unrelated tasks may continue.
 
-Rank the consolidated ledger by real user/caller impact, change amplification, confidence, and verification cost. For change targets, distinguish what the change introduced or worsened from pre-existing findings. Choose the least complex change that resolves the demonstrated issue when fixes are authorized. After edits, revisit affected nodes and edges, not just changed files. Keep the independent reviewer separate from discovery reports; discovery agents' agreement does not replace review of the resulting diff or validation of audit findings.
+Keep task id, purpose, prerequisites, assignee, snapshot, acceptance criteria,
+state, and evidence links in the log. States are `pending`, `ready`, `running`,
+`accepted`, `blocked: reason`, or `superseded: replacement`. Mark a task ready
+only when its prerequisites are accepted. An agent finishing does not itself
+accept the task. After edits, supersede stale evidence where dependencies changed
+and create verification/review tasks against the new state. Do not restart the
+whole graph or erase unaffected coverage.
+
+The ready queue is a bounded selection from the ledger, not the entire backlog.
+Group related findings around the responsible rule or boundary and give the
+group a shared verification target. Retain each symptom's evidence without
+creating duplicate fixes. If tasks touch the same files or one removes a symbol
+another uses, record the dependency before execution. Reconcile evidence after
+each coherent batch; new safety evidence can interrupt the queue.
+
+Rounds bound how much of this graph is executed. New branches, corrections,
+agent retries, and review all consume the same run budget. The lead dispatches
+bounded tasks; agents return follow-up requests instead of spawning an unbounded
+tree of agents. Reserve capacity for synthesis, checks, review, and handoff.
+
+## Give every delegated task a contract
+
+Specify these fields in the brief, using concrete paths and responsibilities:
+
+- **Question and scope:** the decision this task must support, source nodes and
+  edges, entry points, original target/base/head, focus/bar, and exclusions.
+- **Inputs:** repository rules, relevant versions, accepted predecessor reports,
+  applicable ledger decisions, and the source snapshot to inspect. Record HEAD
+  and any working diff; keep the snapshot stable while related agents inspect it.
+- **Authority and budget:** read-only inspection and safe checks, no edits,
+  commits, dependency installation, or external mutations; bounded time/scope.
+  Agents report new edges to the lead for assignment.
+- **Lenses:** architecture for `refactor`/`both`, defects for `bugs`/`both`, and
+  hot paths in relevant units for any focus unless explicitly excluded. Include
+  ownership, business logic/UI separation, shared rules and constants where relevant.
+- **Required output:** inspected files/tests and snapshot; flows and edges
+  traced; owners and dependency directions; findings with severity, `file:line`,
+  affected consumers, evidence, proposed owner/fix, preservation constraints,
+  and verification needed. Separate established facts, uncertain leads,
+  intentional differences, skipped paths, and requests for follow-up work.
+- **Acceptance:** what evidence answers the task's question, which boundaries
+  must be traced, and which gaps prevent closure. `NO FINDINGS` applies only to
+  the stated source and lenses; a timeout or blocked check is not a clean verdict.
+
+For example, ask an agent to trace checkout eligibility from a UI event through
+the application service and persistence adapter, identify every owner of that
+rule, and account for alternative consumers. Do not merely ask it to "review
+checkout" or prescribe an extraction before it has inspected the evidence.
+
+Use available sub-agents for bounded independent work. When unavailable, execute
+the same contracts sequentially and disclose the lack of independent coverage.
+Scale the graph to the scope; a small target may need only a few tasks.
+
+## Accept, synthesize, and close
+
+The lead checks outputs against the contract and source snapshot. Missing paths,
+unsupported findings, or stale reports leave coverage pending or needing revisit;
+request a bounded correction or inspect it directly. Preserve useful partial
+evidence without accepting a conclusion it cannot support.
+
+During verification, distinguish a confirmed problem from a false report,
+overstated impact, a justified design choice, or a proposed fix that adds more
+cost than it removes. Record the reason and source for each disposition. A
+deferral remains open work; neither rejecting a false report nor skipping a
+real problem is a code improvement.
+
+Reconcile shared seams and conflicting reports against source and tests. Record
+current owners, dependency direction, duplicated knowledge, intended boundaries,
+and intentional differences. Trace at least one complete flow across each central
+boundary implicated by a finding. Local clean reports cannot establish that the
+connecting design is sound. Rank the consolidated ledger by impact, change
+amplification, confidence, and verification cost; distinguish introduced,
+worsened, and pre-existing findings for change targets.
+
+For improvements, a finding closes only after the intended ownership change is
+verified across consumers, obsolete paths are removed or justified, required
+checks pass, and independent review accepts the final state. A reviewer must
+not validate their own discovery as independent evidence. Review corrections
+create new tasks and consume another round. For audits, closure means the
+finding and its coverage have been independently challenged, not that code was fixed.
+
+Before finishing, reconcile accepted tasks with the source coverage map and
+ledger. Every in-scope pending edge, unresolved finding, or unavailable check
+has a recorded disposition. The stop rules determine whether this is complete,
+clean, or partial. Persist the next ready tasks and blocked prerequisites for
+the next run; task counts alone are not proof of architectural progress.

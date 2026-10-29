@@ -39,8 +39,8 @@
     },
     {
       "name": "night-shift",
-      "version": "1.3.0",
-      "summary": "Audits or improves a whole repository by default, or a supplied branch, PR, commit range, path, or feature. Sub-agents map connected code; a lead synthesizes architecture, defects, duplication, and hot-path costs.",
+      "version": "1.4.0",
+      "summary": "Maintains repository architecture through recurring audits and improvements, or reviews a supplied target. Agent tasks have explicit contracts; findings cover business logic and UI boundaries, shared rules and constants, defects, tooling gaps, and hot paths. Carries evidence and unfinished work between runs.",
       "category": "Developer Tools",
       "keywords": [
         "code-review",
