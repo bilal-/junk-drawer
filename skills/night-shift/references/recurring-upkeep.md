@@ -6,21 +6,36 @@ regularly does not authorize scheduling, pushing, or making unrelated changes.
 
 ## Store evidence outside tracked source
 
-Use `$(git rev-parse --git-common-dir)/night-shift/` as the state root. Existing
-`log.md` and `ledger.md` there remain usable; reconcile them before adopting a
-different layout. For overlapping worktrees or runs, use separate directories
-under the root, identified by worktree, target, and run id. Never overwrite an
-active run's state. Record the chosen paths in the final report.
+Resolve `git rev-parse --git-common-dir` to an absolute path and use its
+`night-shift/` directory as the state root. Give each new run a unique directory
+under `runs/`; write only that run's records. Older root-level `log.md` and
+`ledger.md` are read-only evidence to reconcile, not current coverage by default.
+Read other runs without changing their records. Resume an existing directory
+only when continuing your own identified run and ownership is clear; an old
+timestamp or `running` label does not prove that another process has stopped.
+If ownership is uncertain, start a new run. Record the chosen absolute paths.
+
+If writes are forbidden or the state root is unavailable, keep the same evidence
+inline and put the handoff in the final report. State explicitly that it was not
+persisted. Do not write tracked files, change permissions, or choose an unapproved
+location to satisfy the logging rule.
 
 Keep two concise records, with links to longer evidence when needed:
 
-- **Log:** repository/worktree, branch, target/base/head, starting and final SHA,
+- **Log:** run id, repository/worktree, branch, target/base/head, starting and
+  checkpoint/final SHA and time, status (`running`, `interrupted`, or `finished`),
   relevant pre-existing edits, focus/bar, budget, stop rule; validation commands,
   results, tool versions/configuration; source map, task graph, checkpoints,
   reviewed SHAs, and next priorities.
 - **Ledger:** stable finding id, responsibility/contract, locations and consumers,
   evidence and inspected SHA, severity, status, decisions and reasons, fix/revert
-  commits, verification, and a concrete condition for reconsideration.
+  commits and branches, integration state, verification and pending independent
+  review, and a concrete condition for reconsideration.
+
+Record the criteria actually applied: an exact revision of the skill and used
+references, or content hashes when no exact revision is available; include the
+applied lens list and severity definitions. Tie each coverage entry to these
+criteria. A release label alone cannot distinguish local edits within a version.
 
 For each source unit and important edge, retain the applicable lens, coverage
 status, inspected source/tests, last inspected SHA/run, relevant contracts and
@@ -32,10 +47,19 @@ the current request or repository rules.
 
 ## Reconcile before selecting work
 
-1. Locate prior state for this repository and scope. Validate commit existence,
+1. Read all prior run records that overlap this repository and scope, including
+   legacy records. Reconcile evidence in the current run's files only. Qualify
+   ids by originating run and link aliases for the same responsibility/contract
+   and affected consumers, so per-run ids do not collide. Retain conflicting
+   dispositions until source evidence or changed premises resolve them. Select
+   coverage by compatible criteria and commit ancestry, not the newest timestamp.
+   Use completed checkpoints; partial or in-progress records are leads, not
+   accepted coverage, even when another run is still writing them.
+   Validate commit existence,
    ancestry, target, focus/bar, applicable instructions, and recorded dirty state
    before using its coverage.
-   A prior branch's fixed finding is not fixed here until its code is present.
+   A prior branch's fixed finding is not fixed here until its code is present;
+   check pending integration below before assigning it for implementation.
    If history is unavailable, diverged, or too ambiguous to compare safely,
    retain leads and decisions but mark affected coverage for fresh inspection.
    A fresh clone starts without prior local coverage unless evidence is supplied.
@@ -52,10 +76,33 @@ the current request or repository rules.
    requirements. A prior verdict cannot override the current criteria. Retry
    deferred findings when their
    named blocker changes, rather than rerunning the same blocked operation.
-4. Carry an `inspected` status only when its source, relevant edges, lens, and
-   validation assumptions remain applicable. Label it as carried coverage,
+4. Compare recorded criteria with the current skill and used references. If
+   criteria changed or are unknown, mark the affected lenses `revisit`; when
+   their extent cannot be established, revisit all requested lenses. Existing
+   source evidence can guide that review but cannot silently satisfy new criteria.
+   Carry an `inspected` status only when its source, relevant edges, criteria,
+   and validation assumptions remain applicable. Label it as carried coverage,
    including the original SHA; never present it as fresh inspection. An old
    "clean" verdict or green suite alone cannot establish this.
+
+## Account for fixes awaiting integration
+
+Before branching or selecting an old finding, check whether its implementation
+is already in the current target or survives on another local branch/commit.
+Record where it was validated and whether the target contains it. Verify that
+the recorded fix still addresses the current contract; a missing commit or
+unverifiable branch is a gap, not proof that the fix remains available.
+
+For a compatible existing fix outside the target, mark
+`awaiting integration <branch/sha>` and link its validation and any pending
+independent review. Do not create a parallel implementation merely because the
+target lacks that commit. Continue that working branch when it is already checked
+out or explicitly selected by the user. Otherwise leave integration and dependent
+tasks pending, work on independent findings, and report the branch needed. Do not
+switch targets, merge, or cherry-pick without authority. The target still has the
+issue and cannot be called clean. Reconsider implementation if the fix is no
+longer available or applicable, was rejected, or the user explicitly requests a
+new approach.
 
 ## Choose a useful maintenance slice
 
@@ -84,11 +131,17 @@ tooling; compare measurements only for compatible scope and settings.
 
 ## Leave a handoff that the next run can use
 
-After required checks and final review, record the final tree/commit, actual
-coverage, accepted task outputs, unresolved edges, and the stop reason. Link
+At every stop, including failed, interrupted, and budget-limited runs, record the
+last known tree/commit, actual coverage, accepted task outputs, unresolved edges,
+and stop reason. State which checks or reviews finished and which remain pending;
+do not wait for a successful gate or final review to leave a handoff. Link
 fixed findings to their commits and final verification; retain deferred,
 contested, and rejected reasons. Distinguish changes validated locally from
 changes integrated into the branch a future run will inspect.
+
+Keep self-reviewed fixes implemented, with independent review still pending.
+Retry the review when a reviewer becomes available; do not recreate the fix.
+If state cannot be written, supply this same handoff in the final report.
 
 Reconcile the current task table and run status with that checkpoint. Completed
 tasks must not still appear `running`; interrupted work returns to `pending` or

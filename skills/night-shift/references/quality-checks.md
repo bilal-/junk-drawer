@@ -28,6 +28,11 @@ This severity concerns the verified coverage gap; it does not require an existin
 production defect. A missing tool brand or an optional stylistic preference does
 not qualify. Reviewers should challenge applicability and equivalent coverage
 before accepting the finding, rather than treating every absent tool as medium.
+Match findings to the requested focus. For `bugs`, include enforcement gaps
+that undermine defect detection or verification; record purely formatting/style
+gaps as maintenance notes outside that finding set. For `refactor` or `both`,
+include applicable maintenance enforcement gaps. Edited files still follow
+project conventions in every focus.
 Unavailable CI access is a verification gap, not proof that a check is absent.
 Keep tooling findings separate from architectural findings so fixing style does
 not stand in for examining responsibility and dependency boundaries.
@@ -74,6 +79,11 @@ configuration, inspect the diff, and keep unrelated layout rewrites out of a
 structural or behavioural commit. Run the required gate afterwards. Existing
 project formatting requirements still apply; adopting a new broad policy is a
 separate decision.
+
+If a formatter only operates project-wide, use a supported narrower invocation
+or restore incidental changes created by this run outside the affected files.
+Preserve pre-existing work. If that cannot satisfy a required gate safely, defer
+the change rather than widening the edit scope silently.
 
 If no suitable tool is available, inspect edited imports and follow local
 conventions manually. Record that this is limited verification and keep the

@@ -556,3 +556,22 @@ benefit, preserved contracts, and required checks. An aggregate target score
 would not establish those properties. It also retains its own targeted-scope,
 permission, and test requirements, including tests as reviewable source and
 immediate verification when safety evidence changes during a batch.
+
+## 2026-10-29 independent release review
+
+Two fresh reviewers assessed `d4d51b1` without actionable findings. A separate
+Claude Opus 5.5 review found six execution gaps: self-review could not satisfy
+unconditional independent-closure rules; concurrent/interrupted run records had
+unclear ownership and reconciliation; an unmerged local fix could be implemented
+again; old coverage lacked a fingerprint of the criteria applied; the initial
+review phase did not receive its bounded units and focus early enough; and the
+mandatory handoff had no path when writes or final review were unavailable.
+These are static workflow findings, not failures observed in a production run.
+
+The corrections distinguish implementation from pending independent review and
+integration, use unique owned run records with cross-run aliases, compare exact
+criteria before carrying coverage, bound both review phases, and return an inline
+handoff when state cannot be saved. Review-limited work cannot claim unqualified
+completion. Supporting corrections clarify dropped tasks, dependency arrows,
+focus-specific tooling findings, and formatter side effects. No extra version
+raise is needed before the first publication of 1.4.0, per the repository rule.

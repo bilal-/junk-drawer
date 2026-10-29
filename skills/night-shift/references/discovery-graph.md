@@ -24,16 +24,12 @@ files repeatedly while central paths remain untouched is not coverage.
 Tasks are units of work with explicit prerequisites and outputs. Typical paths:
 
 ```text
-inspect UI -----\
-inspect domain --> synthesize ownership --> verify finding --> plan change
-inspect storage-/          |                                    |
-                           +--> inspect newly found consumer -----+
-                                                                |
-                     implement --> required checks --> independent review
-                                                            |
-                                  accept result + reconcile coverage
-                                                            |
-                                       next ready work or final handoff
+inspect UI + domain + storage -> synthesize ownership
+synthesize ownership -> verify finding -> plan change
+new consumer/uncertain contract -> inspect it -> verify finding
+plan change -> implement -> required checks -> review
+review -> accept result -> reconcile coverage -> next ready work or handoff
+review correction -> plan correction -> implement -> checks -> new review
 ```
 
 The example shows dependencies, not a fixed sequence for every finding. Audit
@@ -45,7 +41,9 @@ output is a prerequisite for the affected decision. Unrelated tasks may continue
 
 Keep task id, purpose, prerequisites, assignee, snapshot, acceptance criteria,
 state, and evidence links in the log. States are `pending`, `ready`, `running`,
-`accepted`, `blocked: reason`, or `superseded: replacement`. Mark a task ready
+`accepted`, `blocked: reason`, `dropped: reason`, or `superseded: replacement`.
+Drop tasks made unnecessary by a rejected finding rather than leaving them
+pending. Mark a task ready
 only when its prerequisites are accepted. An agent finishing does not itself
 accept the task. After edits, supersede stale evidence where dependencies changed
 and create verification/review tasks against the new state. Do not restart the
@@ -117,12 +115,19 @@ connecting design is sound. Rank the consolidated ledger by impact, change
 amplification, confidence, and verification cost; distinguish introduced,
 worsened, and pre-existing findings for change targets.
 
-For improvements, a finding closes only after the intended ownership change is
+For improvements, normal closure requires that the intended ownership change is
 verified across consumers, obsolete paths are removed or justified, required
 checks pass, and independent review accepts the final state. A reviewer must
 not validate their own discovery as independent evidence. Review corrections
 create new tasks and consume another round. For audits, closure means the
 finding and its coverage have been independently challenged, not that code was fixed.
+
+When no independent reviewer is available, use the skill's explicit self-review
+fallback. Accept the implementation or source-inspection task only with its
+qualified review status; leave a separate independent-review task pending or
+blocked on reviewer availability. Do not requeue implementation of the retained
+fix. Self-review does not count as independent validation and cannot yield an
+unqualified clean or audit-complete verdict.
 
 Before finishing, reconcile accepted tasks with the source coverage map and
 ledger. Every in-scope pending edge, unresolved finding, or unavailable check

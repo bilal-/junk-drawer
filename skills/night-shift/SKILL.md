@@ -36,7 +36,7 @@ choice. Routine refactoring decisions are yours to make within the user's scope.
   of newly added rules. A path or feature target includes its relevant
   boundaries. Inspecting adjacent code does not turn a targeted run into a
   whole-repository sweep.
-- **Action:** an audit or review request reports findings without editing; a
+- **Action:** an audit or review request reports findings without source edits; a
   night-shift, fix, improve, or refactor request also implements verified
   in-scope findings. For a change target with fixes authorized, edit necessary
   related consumers or shared contracts to complete a finding from that change;
@@ -54,14 +54,15 @@ choice. Routine refactoring decisions are yours to make within the user's scope.
   equivalent coverage using [quality checks](references/quality-checks.md).
   Low means a small, confirmed improvement. Taste is not a finding at any bar.
 - **Budget:** the user's round, time, or spend cap; default 8 rounds. A round
-  executes a bounded part of the task graph through synthesis and independent
-  validation, including changes when authorized. Branching investigations and
-  retries share this budget. Reviewing corrections consumes another round;
-  no unbounded inner review loop. Preparation, tests, and
-  reviewers consume the same time/spend budget. Reserve enough to validate and
-  leave a clean tree; do not start work you cannot safely finish.
+  executes a bounded part of the task graph through synthesis and review,
+  including changes when authorized. Use independent validation when available;
+  the Reviewer fallback records any review debt. Branching investigations,
+  corrections, and retries share this budget. Reviewing corrections consumes
+  another round; no unbounded inner review loop. Preparation, tests, and reviewers
+  consume the same time/spend budget. Reserve enough to validate and leave a
+  clean tree; do not start work you cannot safely finish.
 - **Push:** no by default. Commit locally; push only when authorized.
-- **Reviewer:** an available different model; see Reviewer below.
+- **Reviewer:** an independent reviewer, preferably a different model; see Reviewer below.
 
 ## Prepare
 
@@ -84,15 +85,16 @@ choice. Routine refactoring decisions are yours to make within the user's scope.
    read-only and report the gap. Separate optional checks from required ones.
    Missing optional device or integration checks need not stop unrelated work,
    but defer changes whose safety depends on them.
-4. **Use a working branch for edits.** Never change the default branch directly.
-   Audit-only runs do not create commits.
-5. **Start or reconcile the log and ledger.** Read
-   [recurring upkeep](references/recurring-upkeep.md) for state location,
-   compatibility checks, invalidation, and handoff. Record the starting SHA,
-   target/base/head, budget, scope map, validation matrix, task graph, and ranked
-   findings. Carry forward evidence and decisions only where they still apply.
+4. **Start or reconcile the log and ledger.** Read
+   [recurring upkeep](references/recurring-upkeep.md) for state ownership,
+   criteria fingerprints, compatibility, pending integration, and handoff.
    Reconcile prior state before assigning work; do not reset unfinished coverage
-   simply because a new run started.
+   simply because a new run started. If state cannot be written, keep an inline
+   record and include the handoff in the final report.
+5. **Use a working branch for edits.** Reconcile existing implementations before
+   creating a branch. Continue a compatible working branch already checked out
+   or explicitly selected by the user. Never change the default branch directly.
+   Audit-only runs do not create commits.
 6. **Map the original scope into meaningful review units:** packages, features,
    subsystems, or connected modules, not arbitrary file-count chunks. Record
    each unit's responsibility, entry points, dependencies, state/resource
@@ -191,7 +193,8 @@ change. This lens complements, and never replaces, structural discovery.
 ## Each round
 
 For audit-only runs, perform discovery, verify candidate findings against
-source, obtain independent review of findings and coverage, and report. Skip
+source, obtain independent review of findings and coverage (or use the disclosed
+Reviewer fallback), and report. Skip
 implementation, commit, and change-recovery steps.
 
 ### 1. Discover and rank
@@ -226,11 +229,13 @@ choose a coherent batch whose prerequisites and validation fit the budget.
 
 For each finding, record an id, severity, locations and consumers, evidence,
 expected payoff, and status. Use `candidate`, `verified`, `in-progress`,
-`fixed <sha(s)>`, `rejected: <reason>`, `contested: <reason>`, or
-`deferred: <reason>`. Notice unrelated issues without editing outside scope.
-Rejected and contested entries accompany future reviews; reopen only with new
-evidence. If a proposal would undo an earlier change, resolve the disagreement
-on evidence once; do not alternate between designs.
+`fixed <sha(s)>`, `awaiting integration <branch/sha>`, `rejected: <reason>`,
+`contested: <reason>`, or `deferred: <reason>`. Record review status and integration
+state separately from implementation. Notice unrelated issues without editing
+outside scope. Rejected and contested entries accompany future reviews; revisit
+when evidence or premises change, including applicable project or skill rules.
+If a proposal would undo an earlier change, resolve the disagreement on evidence
+once; do not alternate between designs.
 
 ### 2. Verify and plan the selected work
 
@@ -331,14 +336,13 @@ Discovery agents are not the independent reviewer of their resulting changes.
 For an audit-only run, ask the reviewer to challenge findings and source
 coverage rather than assess a nonexistent change.
 
-Start the design assessment with the target, source snapshot, and constraints
-as described under Reviewer. After those initial observations, give the reviewer
-the round's commits or diff for improvements, or the findings for audits, plus
-read access to surrounding code,
-the selected discovery units, project rules/contracts, focus/bar, relevant stack
-checks and versions, validation results/gaps, and rejected/contested ledger entries.
-Keep reviews bounded by connected units; do not repeatedly rescan the entire
-repository just to review a small fix.
+Start the independent design assessment with the round's selected units and
+boundaries, target/base/head, source snapshot, focus/bar, project constraints,
+relevant stack guidance, and validation gaps. Withhold earlier verdicts and the
+author's preferred solution, not the scope needed to bound the review. After
+those initial observations, supply the round's commits/diff for improvements or
+findings for audits, plus the proposed payoff and rejected/contested ledger
+entries. Keep both phases bounded to the selected units and affected boundaries.
 
 For improvement runs, ask for two assessments. For audits, validate findings,
 source coverage, and gaps without a preservation assessment of a nonexistent diff:
@@ -376,21 +380,29 @@ corrections.
 Reconcile completed tasks and invalidated evidence, then dispatch the next ready
 task or pending unit. A clean diff is permission to continue discovery, not a
 reason to end it. Close a finding only when its evidence, affected consumers,
-required checks, and independent review meet its acceptance criteria.
+required checks, and review meet its acceptance criteria. If independent review
+is unavailable, use the qualified closure and review debt under Reviewer; do not
+reimplement an already retained fix.
 
 ## Stop rules
 
 - **Audit complete:** the supplied target or default repository scope and its
-  relevant boundaries have been inspected to the requested bar; findings and
-  validation limits are reported. Uninspected source units or boundaries mean
-  partial coverage under another stop rule. Findings may remain in a complete audit.
+  relevant boundaries have been inspected to the requested bar, and findings
+  and coverage independently validated. Report validation limits. Uninspected
+  source units or boundaries mean partial coverage under another stop rule.
+  Findings may remain in a complete audit.
+- **Review-limited:** actionable discovery and fixes are finished but independent
+  validation remains unavailable. Keep only changes meeting the self-review
+  fallback, report its limits, and carry review tasks into the handoff. This is
+  not an unqualified audit-complete or clean verdict.
 - **Clean:** all original-scope units and relevant boundaries have been inspected
   for the requested focus, no qualifying candidates or unresolved findings remain,
   and the final changes have passed review and required checks. Check the scope
   map, accepted task outputs, graph edges, applicable architecture and hot-path
   coverage, tooling gaps, and ledger together before claiming this. Prior coverage
   must pass the recurring-upkeep validity check; report carried evidence separately
-  from new inspection. For a targeted improvement run, clean refers to the target
+  from new inspection. No independent-review debt may remain. For a targeted
+  improvement run, clean refers to the target
   and its impact set, not the untouched repository. Do not expand a targeted
   run into a whole-repository cleanup at the end.
 - **Budget:** the round, time, or spend cap is reached. Finish or roll back the
@@ -441,7 +453,9 @@ final state passes required checks and outstanding review objections are resolve
 
 Persist the final checkpoint and next-run handoff using
 [recurring upkeep](references/recurring-upkeep.md). This is required even for a
-no-change or budget-limited run; do not schedule future runs unless requested.
+no-change or budget-limited run. If state writes are forbidden or unavailable,
+include the handoff in the final report and disclose that it was not saved.
+Do not schedule future runs unless requested.
 
 Report in plain words:
 
@@ -460,22 +474,27 @@ Report in plain words:
 
 ## Reviewer
 
-Use a different model when available: a separate agent, installed CLI, or API
-can provide it. Choose from existing capabilities and use documented read-only,
-noninteractive options with a timeout; close standard input for CLIs that might
-otherwise wait. The reviewer inspects and reports; the main worker edits.
+Use an independent reviewer, preferring a different model when available; a
+fresh same-model agent is also independent of the author. A separate agent,
+installed CLI, or API can provide it. Choose existing capabilities and documented
+read-only, noninteractive options with a timeout; close standard input for CLIs
+that might otherwise wait. The reviewer inspects and reports; the lead edits.
+Start fresh context per round, bounded to its selected units, boundary flows,
+focus/bar, source snapshot, validation evidence, and established constraints.
+Give repository access rather than an isolated diff. Obtain initial source
+observations before showing the author's preferred solution or prior verdicts,
+then reconcile with the proposed payoff and ledger. Independent package/platform
+reviews may run in parallel, with explicit scopes and one worker resolving findings.
 
-Start fresh review context per round, carrying only project context, coverage,
-validation evidence, and established constraints. Give repository access rather than an
-isolated diff. For an independent design assessment, ask for source observations
-before showing the author's preferred solution or earlier quality verdicts.
-Then reconcile with the proposed payoff and ledger; always supply project
-constraints and compatibility decisions needed to interpret the code. This
-separates initial judgment from checking the proposed result. If useful,
-independent package/platform reviews can run in
-parallel, with explicit scopes and one worker resolving their findings. If no
-different model is available, make a separate fresh review pass yourself and
-state that limitation. Never fabricate independent review.
+If no independent reviewer is available, perform a separate self-review of source,
+diff, affected consumers, and checks. The initial blind pass cannot apply to the
+author. Retain a change only if required checks pass and no safety objection
+remains; mark it `fixed <sha> (self-reviewed; independent review pending)`. Mark
+audit findings `self-challenged; independent validation pending`. Queue review
+of the retained commit or finding, not another implementation. This fallback
+cannot satisfy an explicit requirement for independent approval. Report the
+limitation and outstanding review debt; never claim independent validation or
+an unqualified clean result from self-review.
 
 ## Boundaries
 
