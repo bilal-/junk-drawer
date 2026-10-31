@@ -1,12 +1,12 @@
 # Discovery and delivery graph
 
-Use a source graph to understand the system and a work graph to resolve its
-findings. Both fit in the run log; a table or adjacency list is sufficient.
-No orchestration framework is required. Map the requested target and its affected
-relationships, or the repository when no target was supplied. The lead owns
-scope, acceptance of evidence, edits, validation, and the final result.
+Use the source graph to understand the system and the work graph to resolve its
+findings. A table or adjacency list in the run log is sufficient; no orchestration
+framework is required. Map the requested target and its affected relationships,
+or the repository when no target was supplied. The root owns scope, accepted
+evidence, edits, validation, and the final result.
 
-## Map the source graph
+## Map the source graph before assigning work
 
 Nodes are responsibilities: features, packages, subsystems, or connected modules.
 Edges are calls, dependencies, shared rules/data, resource ownership, platform
@@ -14,123 +14,207 @@ counterparts, and external contracts. Record dependency direction and the owner
 of each shared invariant. A directory can contain several nodes; a node can span
 directories. Mark entry points, critical flows, and uncertain boundaries.
 
-Inspect complete flows across nodes. Assign a boundary or end-to-end flow when
-unit-level inspection could miss ownership or business logic leaking into UI.
-Overlapping inspection is useful at an uncertain seam; scanning the same easy
-files repeatedly while central paths remain untouched is not coverage.
+Reconcile node membership with the actual first-party inventory. Account for
+application and library code, background work, tests, scripts/tooling, and
+build/deploy configuration where present. Do not discover scope solely by walking
+outward from the main entry point: disconnected utilities, secondary platforms,
+and operational paths also need owners. For a targeted run, inventory the target
+and relevant impact set rather than the entire repository. Record exclusions.
 
-## Derive tasks and their dependencies
+For each node and important edge, record applicable lenses, source membership,
+coverage status, and responsible task or valid carried evidence. A skipped lens
+needs an applicability reason. Tests and configuration may belong to a source
+unit or a distinct responsibility, but cannot disappear between assignments.
+Inspect complete flows across nodes, including relevant failure and lifecycle
+paths. Give cross-unit flows explicit tasks; isolated file reviews cannot settle
+shared ownership or business logic leaking into UI.
 
-Tasks are units of work with explicit prerequisites and outputs. Typical paths:
+## Delegate through a hierarchy when useful
 
-```text
-inspect UI + domain + storage -> synthesize ownership
-synthesize ownership -> verify finding -> plan change
-new consumer/uncertain contract -> inspect it -> verify finding
-plan change -> implement -> required checks -> review
-review -> accept result -> reconcile coverage -> next ready work or handoff
-review correction -> plan correction -> implement -> checks -> new review
-```
+The root can delegate a large responsibility to a coordinator, which can delegate
+smaller responsibilities to workers or further coordinators. There is no fixed
+depth limit. Add a level when the area's source or evidence is too large for one
+focused context, not simply because another agent is available. Each child must
+narrow the parent's responsibility or answer a distinct bounded boundary question.
+Do not pass the same whole-repository assignment down an unchanged chain.
 
-The example shows dependencies, not a fixed sequence for every finding. Audit
-paths go from verified findings to independent validation and coverage closure;
-they omit implementation. Independent source inspections can run in parallel.
-Synthesis waits for the connected reports it needs. A new consumer, uncertain
-contract, or contradictory report creates a bounded investigation task whose
-output is a prerequisite for the affected decision. Unrelated tasks may continue.
+For example, a root may assign client, service, shared-domain, and tooling areas;
+a client coordinator may assign web and native areas; a native coordinator may
+assign navigation, persistence, and rendering tasks. This illustrates delegation,
+not a required topology. Choose boundaries from the actual repository. Small
+scopes can use a root and a few workers, or no delegation.
 
-Keep task id, purpose, prerequisites, assignee, snapshot, acceptance criteria,
-state, and evidence links in the log. States are `pending`, `ready`, `running`,
-`accepted`, `blocked: reason`, `dropped: reason`, or `superseded: replacement`.
-Drop tasks made unnecessary by a rejected finding rather than leaving them
-pending. Mark a task ready
-only when its prerequisites are accepted. An agent finishing does not itself
-accept the task. After edits, supersede stale evidence where dependencies changed
-and create verification/review tasks against the new state. Do not restart the
-whole graph or erase unaffected coverage.
+Each coordinator must:
 
-The ready queue is a bounded selection from the ledger, not the entire backlog.
-Group related findings around the responsible rule or boundary and give the
-group a shared verification target. Retain each symptom's evidence without
-creating duplicate fixes. If tasks touch the same files or one removes a symbol
-another uses, record the dependency before execution. Reconcile evidence after
-each coherent batch; new safety evidence can interrupt the queue.
+- Cover its entire assigned inventory with child tasks, direct inspection, or
+  valid carried evidence. Check the union against its assignment; a child's
+  missing paths or lenses remain gaps in the parent report.
+- Give each child the contract below, relevant rules, and only the input context
+  it needs. Keep the assigned snapshot stable while discovery is running.
+- Accept child evidence, reconcile overlapping or contradictory findings, and
+  trace the flows between its children. Aggregating summaries alone is not
+  architectural synthesis.
+- Own boundaries between its children. Send a boundary crossing its own scope
+  to the nearest common ancestor for assignment, with a concrete question and
+  affected nodes. Never assume the other area will inspect it.
+- Return a compact area report with coverage by unit/lens, exclusions, accepted
+  task/evidence links and snapshot, owners and dependency directions, consolidated
+  findings, intentional tradeoffs, blockers, and unresolved boundary questions.
+  Distinguish fresh inspection from carried evidence and leave gaps visible.
 
-Rounds bound how much of this graph is executed. New branches, corrections,
-agent retries, and review all consume the same run budget. The lead dispatches
-bounded tasks; agents return follow-up requests instead of spawning an unbounded
-tree of agents. Reserve capacity for synthesis, checks, review, and handoff.
+Keep detailed source observations and child reports in task-specific artifacts
+under the current run's state directory when writable, or return them inline
+when it is not. Each agent owns only its assigned report; the root owns the
+consolidated log and ledger. Parents read summaries and retrieve detailed evidence
+for acceptance checks, conflicts, or decisions. Do not copy every child transcript
+into every ancestor's context. Checkpoint accepted results before replacing a
+full context; continuation must retain task ids, scope, snapshot, and open gaps.
+
+Delegation remains under the run's authority and resource limits. The root owns
+the round counter and shared concurrency/time/spend allowances; a child cannot
+start another eight-round run or grant itself extra capacity. Allocate worker
+slots explicitly before child dispatch; coordinators count against the same
+capacity as workers and may delegate only within their allocation. Discovery
+coordinators may delegate inspection and synthesis, not source edits or commits.
+The root remains the single editing owner. Respect the harness's available
+workers; a logical hierarchy does not require all coordinators to stay live.
+When slots or delegation are unavailable, return child contracts for scheduling
+or execute them sequentially. Never wait indefinitely for capacity held by
+waiting ancestors. Report limits on independent coverage.
 
 ## Give every delegated task a contract
 
 Specify these fields in the brief, using concrete paths and responsibilities:
 
-- **Question and scope:** the decision this task must support, source nodes and
-  edges, entry points, original target/base/head, focus/bar, and exclusions.
+- **Identity and question:** task/parent id, worker or coordinator role, and the
+  decision this task must support.
+- **Scope:** source membership, nodes and edges, entry points, original
+  target/base/head, focus/bar, exclusions, and ownership of connecting boundaries.
 - **Inputs:** repository rules, relevant versions, accepted predecessor reports,
-  applicable ledger decisions, and the source snapshot to inspect. Record HEAD
-  and any working diff; keep the snapshot stable while related agents inspect it.
-- **Authority and budget:** read-only inspection and safe checks, no edits,
-  commits, dependency installation, or external mutations; bounded time/scope.
-  Agents report new edges to the lead for assignment.
-- **Lenses:** architecture for `refactor`/`both`, defects for `bugs`/`both`, and
-  hot paths in relevant units for any focus unless explicitly excluded. Include
-  ownership, business logic/UI separation, shared rules and constants where relevant.
+  applicable ledger decisions, and source snapshot. Record HEAD and relevant
+  uncommitted state; results from another snapshot need reconciliation.
+- **Authority and limits:** read-only source inspection and safe checks; no
+  source edits, commits, dependency installation, or external mutations. State
+  whether child delegation is allowed, report destination, bounded task
+  time/scope, and the inherited remaining run limits. Report new out-of-scope
+  edges to the parent for assignment rather than silently widening the task.
+- **Lenses:** architecture for `refactor`/`both`, defects for `bugs`/`both`, hot
+  paths in relevant units for any focus unless explicitly excluded. Include
+  ownership, business logic/UI separation, shared rules and constants where
+  relevant. Account for relevant tests and quality enforcement.
 - **Required output:** inspected files/tests and snapshot; flows and edges
   traced; owners and dependency directions; findings with severity, `file:line`,
   affected consumers, evidence, proposed owner/fix, preservation constraints,
-  and verification needed. Separate established facts, uncertain leads,
-  intentional differences, skipped paths, and requests for follow-up work.
-- **Acceptance:** what evidence answers the task's question, which boundaries
-  must be traced, and which gaps prevent closure. `NO FINDINGS` applies only to
-  the stated source and lenses; a timeout or blocked check is not a clean verdict.
+  and verification needed. Separate facts, uncertain leads, intentional
+  differences, skipped paths/lenses, and follow-up requests. A coordinator also
+  returns the compact area report defined above.
+- **Acceptance:** evidence needed to answer the question, assigned paths/lenses
+  and boundaries that must be accounted for, and gaps that prevent closure.
+  `NO FINDINGS` applies only to inspected source and stated lenses; a timeout,
+  summary of directory names, or blocked check is not a clean verdict.
 
-For example, ask an agent to trace checkout eligibility from a UI event through
-the application service and persistence adapter, identify every owner of that
-rule, and account for alternative consumers. Do not merely ask it to "review
-checkout" or prescribe an extraction before it has inspected the evidence.
+For example, assign checkout eligibility from UI event through the application
+service to persistence, name alternative consumers and the shared-rule boundary,
+and require evidence of each rule's owner and error path. A coordinator can
+split those inspections, but must reconcile their contracts before returning.
+Do not merely ask an agent to "review checkout" or prescribe an extraction before
+it has inspected the evidence.
 
-Use available sub-agents for bounded independent work. When unavailable, execute
-the same contracts sequentially and disclose the lack of independent coverage.
-Scale the graph to the scope; a small target may need only a few tasks.
+## Schedule a full discovery sweep within a round
 
-## Accept, synthesize, and close
+A round contains discovery across the requested scope, synthesis, a bounded
+implementation batch when authorized, checks, and independent review. Worker
+calls, nested delegations, and scheduling batches are not additional rounds.
+With twelve areas and three available workers, discovery can take four batches
+within round one; eight rounds must not mean only eight areas get visited.
 
-The lead checks outputs against the contract and source snapshot. Missing paths,
-unsupported findings, or stale reports leave coverage pending or needing revisit;
-request a bounded correction or inspect it directly. Preserve useful partial
-evidence without accepting a conclusion it cannot support.
+Queue tasks for every pending or invalidated unit and important boundary. Keep
+refilling available capacity until all have accepted evidence or a concrete
+blocker, including necessary follow-up investigations. Prioritize central or
+risky paths to order the queue, not to exclude its tail. Complete this initial
+sweep and system synthesis before optional implementation. Urgent safety work
+can interrupt discovery but does not erase the remaining queue. A time/spend
+cap can stop mid-sweep; record actual partial coverage and the next ready work.
 
-During verification, distinguish a confirmed problem from a false report,
-overstated impact, a justified design choice, or a proposed fix that adds more
-cost than it removes. Record the reason and source for each disposition. A
-deferral remains open work; neither rejecting a false report nor skipping a
-real problem is a code improvement.
+Each later round reconciles the entire coverage map and discovers new or stale
+areas. Carry evidence only under recurring-upkeep validity rules; do not reread
+unchanged source just to fill eight rounds. Implementation corrections use the
+next round and need fresh review. Time-bound each discovery assignment in its contract. For a
+failed or incomplete assignment, allow one bounded recovery attempt: retry,
+directly inspect the missing source, or subdivide and collect narrower reports.
+If gaps remain after that attempt, retain useful evidence and mark those gaps
+blocked; continue independent discovery. Keep the original task's acceptance
+gaps and recovery history when splitting or reassigning it, so delegation cannot
+reset retries. Reopen it only when new evidence or changed conditions can advance
+it. This recovery bound does not limit the depth of planned subdivision.
+A blocked unit remains pending/revisit in coverage, not inspected.
 
-Reconcile shared seams and conflicting reports against source and tests. Record
-current owners, dependency direction, duplicated knowledge, intended boundaries,
-and intentional differences. Trace at least one complete flow across each central
-boundary implicated by a finding. Local clean reports cannot establish that the
-connecting design is sound. Rank the consolidated ledger by impact, change
-amplification, confidence, and verification cost; distinguish introduced,
-worsened, and pre-existing findings for change targets.
+Tasks have explicit prerequisites and outputs. Typical dependencies are:
 
-For improvements, normal closure requires that the intended ownership change is
-verified across consumers, obsolete paths are removed or justified, required
-checks pass, and independent review accepts the final state. A reviewer must
-not validate their own discovery as independent evidence. Review corrections
-create new tasks and consume another round. For audits, closure means the
-finding and its coverage have been independently challenged, not that code was fixed.
+```text
+inventory -> area coordinators -> worker inspections -> area synthesis
+area reports + cross-area flow inspections -> whole-scope synthesis
+uncertain contract -> bounded investigation -> affected synthesis/decision
+verified finding -> plan -> implement -> required checks -> independent review
+review correction -> next round's correction -> checks -> new review
+accepted reports + current coverage + ledger -> closure or next ready work
+```
 
-When no independent reviewer is available, use the skill's explicit self-review
-fallback. Accept the implementation or source-inspection task only with its
-qualified review status; leave a separate independent-review task pending or
-blocked on reviewer availability. Do not requeue implementation of the retained
-fix. Self-review does not count as independent validation and cannot yield an
-unqualified clean or audit-complete verdict.
+These are dependencies, not a fixed sequence for every finding. Audit paths omit
+implementation. Synthesis waits for the reports it needs; unrelated tasks can
+continue. Every new investigation must identify the unresolved question and the
+decision it blocks. Group related findings around a responsible rule or boundary
+with one verification target, retaining each symptom's evidence.
 
-Before finishing, reconcile accepted tasks with the source coverage map and
-ledger. Every in-scope pending edge, unresolved finding, or unavailable check
-has a recorded disposition. The stop rules determine whether this is complete,
-clean, or partial. Persist the next ready tasks and blocked prerequisites for
-the next run; task counts alone are not proof of architectural progress.
+Keep task id/parent, prerequisites, assignee, snapshot, acceptance criteria,
+state, and evidence links in the log. States are `pending`, `ready`, `running`,
+`accepted`, `blocked: reason`, `dropped: reason`, or `superseded: replacement`.
+A task is ready only when its prerequisites are accepted. An agent finishing is
+not acceptance. Drop work made unnecessary by a rejected finding, but never drop
+its source-coverage obligation with it. Keep the discovery frontier separate
+from the selected implementation batch. Order edits sharing files or changing
+symbols used by another task. After edits, supersede affected evidence and add
+verification/review tasks; preserve unaffected coverage and graph history.
+
+## Synthesize the whole system and close honestly
+
+At each level, check outputs against the contract and snapshot. Missing paths,
+unsupported claims, or stale evidence leave coverage pending or needing revisit;
+request a bounded correction or inspect directly. Preserve useful partial
+results without accepting a conclusion they cannot support.
+
+The root checks area coverage against the original inventory and verifies
+cross-area claims against source. Trace end-to-end responsibilities, dependency
+directions, shared rules and constants, UI/domain separation, error/resource
+ownership, and repeated runtime costs where applicable. Look for duplicated
+knowledge, incompatible assumptions, or displaced complexity between areas that
+individually reported no findings. Connect shared causes; do not simply concatenate
+worker findings. Record strengths and intentional differences as well as gaps.
+
+Verify candidates before action. Distinguish confirmed problems, false reports,
+overstated impact, justified designs, and fixes that cost more than they remove;
+record source and reasons for each disposition. Rank the consolidated ledger by
+impact, change amplification, confidence, and verification cost. Distinguish
+introduced, worsened, and pre-existing findings for change targets. Rejecting a
+false report or deferring a real problem is not an implemented improvement.
+
+For improvements, normal closure requires the ownership change verified across
+consumers, obsolete paths removed or justified, required checks passing, and
+independent review accepting the final state. Audit closure requires independent
+challenge of findings and coverage, not implementation. A discovery worker or
+coordinator cannot independently validate the output it produced or synthesized;
+use a fresh reviewer outside that work's authoring/discovery chain. Reviewers
+need the requested scope and coverage gaps as well as selected findings.
+
+When no independent reviewer is available, use the skill's self-review fallback.
+Accept retained implementation or inspection only with its qualified review
+status; leave a separate independent-review task pending or blocked. Do not
+requeue implementation of a retained fix. Self-review cannot yield an unqualified
+clean or audit-complete verdict.
+
+Before stopping, reconcile every in-scope unit/lens and important edge with its
+accepted evidence or gap, and every task and finding with its current disposition.
+Full coverage requires no uninspected in-scope units or unresolved inspection
+boundaries; a blocked task's documented reason does not satisfy that requirement.
+Apply the skill's stop rules and persist next ready tasks and blocked prerequisites.
+Task counts, delegation depth, and eight elapsed rounds are not coverage proof.
