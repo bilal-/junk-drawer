@@ -39,8 +39,8 @@
     },
     {
       "name": "night-shift",
-      "version": "1.4.0",
-      "summary": "Maintains repository architecture through recurring audits and improvements, or reviews a supplied target. Agent tasks have explicit contracts; findings cover business logic and UI boundaries, shared rules and constants, defects, tooling gaps, and hot paths. Carries evidence and unfinished work between runs.",
+      "version": "1.5.0",
+      "summary": "Maintains repository architecture or reviews a supplied target through scope-wide discovery rounds. Nested coordinators delegate bounded tasks, reconcile coverage, and synthesize findings across business logic, UI boundaries, shared rules, defects, tooling, and hot paths. Carries evidence and unfinished work between runs.",
       "category": "Developer Tools",
       "keywords": [
         "code-review",

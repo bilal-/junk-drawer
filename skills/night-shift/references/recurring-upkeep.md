@@ -34,7 +34,8 @@ Keep two concise records, with links to longer evidence when needed:
 - **Log:** run id, repository/worktree, branch, target/base/head, starting and
   checkpoint/final SHA and time, status (`running`, `interrupted`, or `finished`),
   relevant pre-existing edits, focus/bar, budget, stop rule; validation commands,
-  results, tool versions/configuration; source map, task graph, checkpoints,
+  results, tool versions/configuration; source map, task graph with parent/child
+  assignments and report links, checkpoints,
   reviewed SHAs, reconciled run/checkpoint identities, and next priorities.
 - **Ledger:** stable finding id, responsibility/contract, locations and consumers,
   evidence and inspected SHA, severity, status, decisions and reasons, fix/revert
@@ -127,14 +128,21 @@ issue and cannot be called clean. Reconsider implementation if the fix is no
 longer available or applicable, was rejected, or the user explicitly requests a
 new approach.
 
-## Choose a useful maintenance slice
+## Choose work without shrinking coverage
 
-Within the requested scope, prioritize regressions and unfinished safety work,
-changed or invalidated boundaries, and verified high-value open findings. Also
-reserve discovery capacity for pending and oldest-inspected units so repeated
-changes to one feature do not starve the rest of the repository. Record which
-units are next; when urgent work consumes the budget, carry that queue forward
-and report the delay. A targeted run never expands just to satisfy this rotation.
+Reconcile the whole requested scope at each run. Prioritize regressions and
+unfinished safety work, changed or invalidated boundaries, and pending or
+oldest-inspected units when ordering discovery. This ordering does not limit the
+scope to a maintenance slice: schedule every pending/revisit unit within the
+round's discovery sweep. Valid carried evidence can satisfy unchanged areas;
+record that reuse rather than claiming a fresh scan. A targeted run never expands
+just to satisfy rotation.
+
+Select a bounded improvement batch after scope-wide discovery and synthesis.
+When urgent safety work interrupts discovery, retain and resume its queue.
+When time/spend, unavailable evidence, or another real stop condition prevents
+full coverage, name the missing areas and carry their tasks forward. A new run
+or a new subtree does not reset the inventory or its unfinished obligations.
 
 On an unchanged repository, continue pending coverage, sample the oldest carried
 boundaries against source, or recheck a newly unblocked finding. Sampling renews

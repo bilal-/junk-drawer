@@ -1,6 +1,6 @@
 ---
 name: "night-shift"
-description: "Maintain a repository through recurring architectural audits and improvements, or review a supplied branch, PR, commit range, path, or feature. Uses a graph of bounded agent tasks with explicit contracts to examine responsibility boundaries, business logic and UI separation, shared rules and constants, defects, tooling gaps, and hot-path costs. For improvements, makes small tested commits and seeks independent review. Carries evidence, decisions, and unfinished coverage between runs. Use for regular repository upkeep or focused code review and refactoring."
+description: "Maintain a repository through recurring architectural audits and improvements, or review a supplied branch, PR, commit range, path, or feature. Uses a hierarchical graph of agent tasks with explicit contracts and scope-wide discovery rounds to examine responsibility boundaries, business logic and UI separation, shared rules and constants, defects, tooling gaps, and hot-path costs. For improvements, makes small tested commits and seeks independent review. Carries evidence, decisions, and unfinished coverage between runs. Use for regular repository upkeep or focused code review and refactoring."
 ---
 
 # Night shift
@@ -53,14 +53,17 @@ choice. Routine refactoring decisions are yours to make within the user's scope.
   quality enforcement is also medium; establish applicability and check for
   equivalent coverage using [quality checks](references/quality-checks.md).
   Low means a small, confirmed improvement. Taste is not a finding at any bar.
-- **Budget:** the user's round, time, or spend cap; default 8 rounds. A round
-  executes a bounded part of the task graph through synthesis and review,
-  including changes when authorized. Use independent validation when available;
-  the Reviewer fallback records any review debt. Branching investigations,
-  corrections, and retries share this budget. Reviewing corrections consumes
-  another round; no unbounded inner review loop. Preparation, tests, and reviewers
-  consume the same time/spend budget. Reserve enough to validate and leave a
-  clean tree; do not start work you cannot safely finish.
+- **Budget:** user's round, time, or spend cap; default 8 rounds. A round is
+  a scope-wide discovery, synthesis, and review cycle, with a bounded batch of
+  changes when authorized. It is not one agent call, scheduling batch, or source
+  unit. Complete the scope's discovery through as many bounded scheduling batches
+  as needed within that round. Later rounds retain valid coverage and revisit
+  affected areas; they need not reread unchanged source. Implementation corrections
+  and their review use another round, not an unbounded inner implementation loop. All
+  orchestration levels share the same round counter and any time/spend limits;
+  delegation never resets them. Time/spend or environment limits can interrupt
+  a sweep: report partial coverage, never count omitted areas as inspected.
+  Reserve capacity for validation and a safe handoff.
 - **Push:** no by default. Commit locally; push only when authorized.
 - **Reviewer:** an independent reviewer, preferably a different model; see Reviewer below.
 
@@ -106,23 +109,25 @@ run checks on a checkout another run may mutate.
    required ones. Missing optional device or integration checks need not stop
    unrelated work, but defer changes whose safety depends on them.
 6. **Map the original scope into meaningful review units:** packages, features,
-   subsystems, or connected modules, not arbitrary file-count chunks. Record
-   each unit's responsibility, entry points, dependencies, state/resource
-   owners, checks, and coverage status per applicable lens (architecture,
-   defects, hot paths): `pending`, `inspected`, or `revisit`.
-   Exclude generated and third-party code unless specifically in scope; inspect
-   its contracts when relevant. Reading a directory listing or README is not
-   source review. In a large repository, work through units across rounds.
-
-7. **Build the work graph.** Read the
-   [discovery graph](references/discovery-graph.md). Connect source units and
-   boundary flows, then derive tasks with prerequisites, explicit input/output
-   contracts, and acceptance criteria. Dispatch ready discovery tasks to
-   available sub-agents; synthesize connected reports before selecting changes.
-   New evidence can add investigation tasks; edits invalidate affected evidence
-   and lead to checks and independent review. The lead owns acceptance, edits,
-   and closure. With no agents, follow the graph sequentially and report the
-   limitation.
+   subsystems, or connected modules, not arbitrary file-count chunks. Reconcile
+   the map with the first-party source, tests, tooling, and build/deploy inventory
+   so disconnected or less prominent areas are not omitted. Record each unit's
+   responsibility, source membership, entry points, dependencies, state/resource
+   owners, checks, and coverage per applicable lens (architecture, defects, hot
+   paths): `pending`, `inspected`, or `revisit`. Record exclusions and inapplicable
+   lenses with reasons. Exclude generated and third-party code unless specifically
+   in scope; inspect its contracts when relevant. A directory listing or README
+   establishes inventory, not source coverage.
+7. **Build the work graph.** Read
+   [discovery graph](references/discovery-graph.md). Give every in-scope unit and
+   important boundary a discovery task or valid carried evidence. Delegate large
+   areas to scoped coordinators, which may subdivide further with explicit
+   contracts. Use available sub-agents for independent work; execute the same
+   graph sequentially when unavailable and report that limitation. The root owns
+   whole-scope accounting, cross-area synthesis, edits, and closure. Accept
+   compact reports with evidence links at each level; inspect connecting flows
+   before selecting changes. New evidence adds bounded investigations; edits
+   invalidate affected coverage and lead to checks and independent review.
 
 ## Find worthwhile refactors
 
@@ -209,33 +214,37 @@ implementation, commit, and change-recovery steps.
 
 ### 1. Discover and rank
 
-Dispatch ready tasks from the work graph in bounded batches. Accept reports
-only against their contracts; incomplete or stale reports leave coverage open.
-Reconcile connected reports into one ledger and verify candidates against source.
-Create follow-up tasks for unresolved boundaries or conflicting ownership before
-planning a change that depends on them. Follow the recurring-upkeep priorities
-when selecting changed areas, old findings, and pending or stale coverage.
+Dispatch the discovery frontier for the entire requested scope, using bounded
+scheduling batches and the hierarchy in the graph reference. Keep assigning
+pending or invalidated units as workers become available within the same round.
+Accept reports only against their contracts; incomplete or stale reports leave
+coverage open. For each applicable unit and important boundary, obtain accepted
+inspection evidence, validate carried evidence, or record a concrete blocker.
+A scheduling batch finishing or returning no findings does not finish discovery.
+
+Coordinators synthesize connected reports into compact area reports; the root
+reconciles them into one ledger and checks cross-area flows against source.
+Resolve missing ownership, conflicting reports, and unassigned boundaries through
+bounded follow-up tasks before decisions depending on them. Complete initial
+scope discovery and whole-scope synthesis before optional improvements; urgent
+safety work may interrupt it, but resume the remaining coverage afterward.
+Unavailable areas keep the result partial even when independent fixes can proceed.
+
 For change targets, search the repository for existing equivalents of rules,
 helpers, types, and mappings added or altered by the diff. Mark findings as
-introduced, worsened, or pre-existing; prioritize the first two. Track
-architecture and hot-path coverage separately where applicable. A clean
-file-level report does not establish a clean cross-unit design.
+introduced, worsened, or pre-existing; prioritize the first two. Inspect relevant
+adjacent contracts without expanding into unrelated repository cleanup. Track
+applicable lenses separately; clean local reports do not establish sound
+cross-unit design. For bugs-only runs, use the same coverage discipline to seek
+reachable defects.
 
-Inspect the next connected part of the original scope, prioritizing central
-flows, known duplication, and risky boundaries. Carry forward unresolved review
-findings. Even if the previous diff was clean, keep discovering while units
-remain pending. Revisit units when changes affect their contracts or ownership.
-For a bugs-only run, use the same coverage discipline to seek reachable defects.
-
-Add evidence-backed candidates to the ledger. Rank by user/caller risk, reduction
-in change amplification or reasoning burden, confidence, and verification cost.
-Prefer a substantive, provable improvement over a collection of easy renames.
+Rank evidence-backed candidates by user/caller risk, reduction in change
+amplification or reasoning burden, confidence, and verification cost. Group
+symptoms of one verified ownership or contract problem under a root finding,
+preserving locations and consumers. Count the underlying improvement once.
+Choose a coherent implementation batch whose prerequisites and validation fit
+the remaining budget; this selection must not shrink the discovery scope.
 Do not manufacture work to fill the budget.
-
-Group symptoms of the same verified ownership or contract problem under one
-root finding, preserving their locations and consumers. Count the underlying
-improvement once. Keep the round's ready work distinct from the full backlog;
-choose a coherent batch whose prerequisites and validation fit the budget.
 
 For each finding, record an id, severity, locations and consumers, evidence,
 expected payoff, and status. Use `candidate`, `verified`, `in-progress`,
@@ -342,17 +351,24 @@ review; any authorized push belongs after final review and required checks.
 
 ### 5. Review independently
 
-Discovery agents are not the independent reviewer of their resulting changes.
-For an audit-only run, ask the reviewer to challenge findings and source
-coverage rather than assess a nonexistent change.
+Discovery workers and coordinators cannot independently review work they
+produced or synthesized. For an audit-only run, ask the reviewer to challenge
+findings and source coverage rather than assess a nonexistent change. Give
+coverage reviewers the full scope inventory, coverage gaps, and, after their
+initial source observations, accepted area reports and whole-scope synthesis.
+Use bounded review assignments across areas and connecting flows as needed;
+reviewing the selected implementation batch alone cannot validate full coverage.
 
-Start the independent design assessment with the round's selected units and
-boundaries, target/base/head, source snapshot, focus/bar, project constraints,
-relevant stack guidance, and validation gaps. Withhold earlier verdicts and the
-author's preferred solution, not the scope needed to bound the review. After
-those initial observations, supply the round's commits/diff for improvements or
-findings for audits, plus the proposed payoff and rejected/contested ledger
-entries. Keep both phases bounded to the selected units and affected boundaries.
+Bound each review contract explicitly: coverage review covers its assigned areas
+and connecting flows, collectively including the whole requested scope and root
+synthesis; change review covers the implementation batch and affected consumers.
+Start each independent design assessment with that scope, target/base/head,
+source snapshot, focus/bar, project constraints, relevant stack guidance, and
+validation gaps. Withhold earlier verdicts and the author's preferred solution,
+not the scope needed to bound review. After initial observations, supply the
+relevant findings/area reports and commits/diff when present, plus proposed payoff
+and rejected/contested ledger entries. Keep both phases within the same review
+contract; the implementation selection must not narrow coverage review.
 
 For improvement runs, ask for two assessments. For audits, validate findings,
 source coverage, and gaps without a preservation assessment of a nonexistent diff:
@@ -387,12 +403,15 @@ corrections.
 
 ### 6. Check the stopping conditions
 
-Reconcile completed tasks and invalidated evidence, then dispatch the next ready
-task or pending unit. A clean diff is permission to continue discovery, not a
-reason to end it. Close a finding only when its evidence, affected consumers,
-required checks, and review meet its acceptance criteria. If independent review
-is unavailable, use the qualified closure and review debt under Reviewer; do not
-reimplement an already retained fix.
+Reconcile completed tasks and invalidated evidence against the whole requested
+scope. Check the inventory, per-lens unit coverage, cross-area boundaries,
+accepted subtree reports, and remaining graph tasks. New pending units or stale
+edges still require discovery; a clean diff cannot close them. Do not infer
+coverage from the number of agents, batches, findings, or rounds completed.
+Close a finding only when its evidence, affected consumers, required checks,
+and review meet its acceptance criteria. If independent review is unavailable,
+use qualified closure and review debt under Reviewer; do not reimplement an
+already retained fix.
 
 ## Stop rules
 
@@ -415,7 +434,8 @@ reimplement an already retained fix.
   improvement run, clean refers to the target
   and its impact set, not the untouched repository. Do not expand a targeted
   run into a whole-repository cleanup at the end.
-- **Budget:** the round, time, or spend cap is reached. Finish or roll back the
+- **Budget:** the round, time, or spend cap is reached. Scheduling batches
+  and nested delegations do not consume separate rounds. Finish or roll back the
   current step within the reserved cleanup budget. Report pending coverage and
   work honestly; budget exhaustion does not mean clean.
 - **No safe remaining work:** remaining findings are deferred or contested and
@@ -470,7 +490,9 @@ Do not schedule future runs unless requested.
 Report in plain words:
 
 - Target, resolved base/head for change scopes, action (audit or improvement),
-  stop rule, rounds, and actual coverage including uninspected units.
+  stop rule, rounds (separate from scheduling batches), and coverage by area
+  and applicable lens, including fresh, carried, pending/revisit, and blocked
+  coverage. Name uninspected units and unresolved cross-area boundaries.
 - Structural improvements by area and the concrete maintenance burden removed,
   or source-backed audit findings; list behavioural fixes separately. Fewer
   lines alone are not an improvement.
@@ -489,9 +511,9 @@ fresh same-model agent is also independent of the author. A separate agent,
 installed CLI, or API can provide it. Choose existing capabilities and documented
 read-only, noninteractive options with a timeout; close standard input for CLIs
 that might otherwise wait. The reviewer inspects and reports; the lead edits.
-Start fresh context per round, bounded to its selected units, boundary flows,
-focus/bar, source snapshot, validation evidence, and established constraints.
-Give repository access rather than an isolated diff. Obtain initial source
+Start a fresh context per review task, bounded by its coverage or change-review
+contract, focus/bar, source snapshot, validation evidence, and established
+constraints. Give repository access rather than an isolated diff. Obtain initial source
 observations before showing the author's preferred solution or prior verdicts,
 then reconcile with the proposed payoff and ledger. Independent package/platform
 reviews may run in parallel, with explicit scopes and one worker resolving findings.

@@ -595,3 +595,69 @@ still preceded checkout isolation. Preparation now keeps early inspection
 read-only, establishes ownership/isolation, and runs project checks against the
 selected checkout. An unavailable safe checkout leaves validation and editing
 blocked rather than permitting checks against another run's changing tree.
+
+## 2026-10-30 scope-wide rounds and nested orchestration (1.5.0)
+
+The owner reported that night-shift sometimes finished quickly without examining
+several repository areas. The existing skill described a source graph and task
+contracts, but defined a round as a bounded part of that graph, defaulted to eight
+rounds, and explicitly spread units across rounds. Discovery, implementations,
+and correction reviews could therefore consume the cap before the scope had
+been visited. This is an owner-reported workflow failure; its frequency and
+repository-specific outcomes have not been independently reproduced here.
+
+The owner clarified that eight rounds remain useful, provided they cover the
+requested scope: the full repository by default or the supplied section/target.
+They also requested sub-orchestrators that can delegate several levels deep to
+manage context, with strong contracts and whole-system synthesis. These are
+product requirements, not evidence that any particular agent count or depth
+improves review quality.
+
+The revision separates scheduling batches from rounds. The first discovery sweep
+accounts for every in-scope unit and important boundary before optional fixes;
+subsequent cycles reuse valid evidence and revisit affected areas. A finite
+worker pool can process many batches in one round. The inventory includes
+secondary and disconnected first-party areas, tests, scripts, and configuration,
+so traversal from a prominent entry point alone cannot define coverage. Explicit
+time/spend limits still take precedence, and blocked or uninspected areas must
+remain visible as partial coverage.
+
+Delegation now permits a hierarchy with no fixed depth limit. Every child narrows
+its parent's responsibility or answers a distinct bounded boundary question;
+coordinators reconcile child coverage and trace the relationships between their
+children. Cross-area questions go to their nearest common ancestor. Compact
+reports and linked detailed evidence avoid copying whole transcripts up the tree.
+The root retains overall coverage, architectural synthesis, and edit ownership.
+All levels share the round counter, capacity, and any time/spend cap; waiting
+coordinators cannot reserve every slot and then wait for unavailable descendants.
+These constraints address failure modes implied by nested scheduling and context
+limits, not measured guarantees of concurrency or architectural completeness.
+
+Existing preservation, independent review, recurring-evidence validity, and
+scope limits remain in force. A review of one improvement batch cannot establish
+full-scope coverage, and a coordinator cannot independently approve the evidence
+it synthesized. Completion depends on accepted source evidence and explicit
+boundaries, not eight elapsed rounds, a count of agents, or a list of findings.
+
+### Behavioral review of this revision
+
+An independent agent exercised the instructions as a dry-run scheduling exercise:
+a 15-unit repository with four total worker/coordinator slots and nested areas;
+a native-sync audit with a two-round, twenty-minute cap, a worker timeout, and
+conflicting boundary reports; and recurring upkeep with carried evidence, pending
+jobs coverage, an unreviewed fix, and an unavailable integration check. This was
+an instruction-level simulation, not an executed repository audit or evidence
+that the proposed hierarchy improves production coverage.
+
+The review identified two actionable gaps. Discovery failure recovery had no
+explicit attempt limit, so a stalled first sweep could avoid the three-round
+no-progress rule indefinitely. Review language also still referred to selected
+units in a way that could narrow coverage validation to the implementation batch.
+The corrections give a failed discovery assignment one bounded recovery attempt,
+retain its acceptance gaps and recovery history through splitting/reassignment,
+and separate scope-wide coverage/synthesis review from changed-code review.
+The reviewer re-read the corrections and reported no further actionable
+contradictions. Its scenarios retained pending units across scheduling batches,
+kept targeted boundaries narrow, and preserved review/validation debt alongside
+carried source evidence; none of those simulated dispositions establishes actual
+source inspection or test results.
